@@ -1,0 +1,140 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prism-lab-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017/prism-ci
+      JWT_SECRET: ci-only-secret-that-is-never-used-outside-github-actions
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+    steps:
+      - name: Check out the exact release commit
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run release verification
+        run: npm run release:verify
+
+  deploy:
+    name: Deploy to EC2
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Check out the exact release commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configure SSH trust
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/id_ed25519" "$HOME/.ssh/known_hosts"
+
+      - name: Transfer and activate release
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -Eeuo pipefail
+          test -n "$EC2_HOST"
+          test -n "$EC2_USER"
+          target="$EC2_USER@$EC2_HOST"
+          archive_path="$(mktemp)"
+          remote_archive="/tmp/prism-lab-$RELEASE_SHA.tar"
+          trap 'rm -f "$archive_path"' EXIT
+
+          git archive --format=tar "$RELEASE_SHA" > "$archive_path"
+          scp -o BatchMode=yes "$archive_path" "$target:$remote_archive"
+          ssh -o BatchMode=yes "$target" "bash -s -- '$RELEASE_SHA' '$remote_archive'" <<'REMOTE'
+          set -Eeuo pipefail
+
+          release_sha="$1"
+          archive_path="$2"
+          app_user='prism'
+          release_root='/srv/prism-lab/releases'
+          current_link='/srv/prism-lab/current'
+          release_id="$(date -u +'%Y%m%dT%H%M%SZ')-${release_sha:0:12}"
+          release_dir="$release_root/$release_id"
+
+          trap 'rm -f -- "$archive_path"' EXIT
+          sudo -n true
+          sudo -n install -d -o "$app_user" -g "$app_user" -m 0750 "$release_root" "$release_dir"
+          sudo -n tar -xf "$archive_path" --no-same-owner -C "$release_dir"
+          sudo -n chown -R "$app_user:$app_user" "$release_dir"
+
+          sudo -n -u "$app_user" -H env RELEASE_DIR="$release_dir" bash -lc '
+            set -Eeuo pipefail
+            set -a; source /etc/prism-lab.env; set +a
+            cd "$RELEASE_DIR"
+            npm ci
+            npm run release:verify
+          '
+
+          # Validate the candidate against the installed Nginx configuration
+          # before making it the live release.
+          sudo -n bash -c '
+            set -Eeuo pipefail
+            set -a; source /etc/prism-lab.env; set +a
+            PRISM_APP_DIR="$1"
+            export PRISM_APP_DIR
+            bash "$PRISM_APP_DIR/deployment/scripts/preflight.sh"
+          ' bash "$release_dir"
+
+          # Back up the current data before changing the live application link.
+          if [[ -L "$current_link" ]]; then
+            sudo -n -u "$app_user" -H bash -lc '
+              set -Eeuo pipefail
+              set -a; source /etc/prism-lab.env; set +a
+              bash "$PRISM_APP_DIR/deployment/scripts/backup.sh"
+            '
+          fi
+
+          sudo -n ln -s "$release_dir" "$current_link.new"
+          sudo -n mv -Tf "$current_link.new" "$current_link"
+
+          sudo -n -u "$app_user" -H bash -lc '
+            set -Eeuo pipefail
+            set -a; source /etc/prism-lab.env; set +a
+            cd "$PRISM_APP_DIR"
+            if pm2 describe prism-lab >/dev/null 2>&1; then
+              pm2 reload prism-lab --update-env
+            else
+              pm2 start deployment/pm2/ecosystem.config.js --update-env
+            fi
+            pm2 save
+          '
+          REMOTE
