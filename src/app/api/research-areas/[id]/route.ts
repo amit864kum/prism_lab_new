@@ -1,5 +1,6 @@
 import { handleApiError } from '@/lib/errors/api-error'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getCurrentUser } from '@/lib/auth'
 import { researchAreaSchema } from '@/validators/research'
 import {
@@ -68,6 +69,10 @@ export async function PUT(
         { status: 404 }
       )
     }
+
+    revalidatePath('/research/areas')
+    revalidatePath('/research/areas/[slug]', 'page')
+    revalidatePath('/')
 
     return NextResponse.json({ researchArea })
   } catch (error) {

@@ -24,13 +24,21 @@ export const researchAreaSchema = z
       })
     }
   })
-  .transform((data) => ({
-    ...data,
-    description: data.description?.trim() || data.overview?.trim() || '',
-    overview: data.overview?.trim() || data.description?.trim() || '',
-    order: data.order ?? data.displayOrder ?? 0,
-    displayOrder: data.displayOrder ?? data.order ?? 0,
-  }))
+  .transform((data) => {
+    // `overview` is retained for compatibility with older records, but the
+    // admin-facing description is the canonical public copy. Keeping both
+    // fields synchronized prevents a stale legacy overview from masking an
+    // updated description on the research-area detail page.
+    const description = data.description?.trim() || data.overview?.trim() || ''
+
+    return {
+      ...data,
+      description,
+      overview: description,
+      order: data.order ?? data.displayOrder ?? 0,
+      displayOrder: data.displayOrder ?? data.order ?? 0,
+    }
+  })
 
 export const projectSchema = z.object({
   title: z.string().min(1, 'Title is required').trim(),

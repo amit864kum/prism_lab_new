@@ -10,6 +10,7 @@ interface ResearchArea {
   title: string
   slug: string
   description: string
+  overview?: string
   imageUrl?: string
   order: number
 }
@@ -94,7 +95,7 @@ export default function ResearchAreasPage() {
     setEditId(area._id)
     setTitle(area.title)
     setSlug(area.slug)
-    setDescription(area.description)
+    setDescription(area.description || area.overview || '')
     setImageUrl(area.imageUrl || '')
     setOrder(area.order)
     setManualSlug(true)
@@ -135,10 +136,12 @@ export default function ResearchAreasPage() {
     }
 
     setSubmitting(true)
+    const overviewDescription = description.trim()
     const payload = {
       title,
       slug,
-      description,
+      description: overviewDescription,
+      overview: overviewDescription,
       imageUrl: imageUrl || undefined,
       order: Number(order),
     }

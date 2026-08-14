@@ -19,7 +19,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme={DEFAULT_THEME}
-          enableSystem
+          enableSystem={false}
           disableTransitionOnChange
           storageKey={THEME_STORAGE_KEY}
         >

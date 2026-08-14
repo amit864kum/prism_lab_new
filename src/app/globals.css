@@ -151,6 +151,25 @@ body {
   text-align: left !important;
 }
 
+.research-area-detail-page :where(h1, h2, h3, h4, h5, h6),
+.research-area-detail-page .research-area-ui-copy,
+.research-area-detail-page .research-area-hero-copy {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.research-area-detail-page .research-area-centered-copy {
+  text-align: center !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.research-area-detail-page .research-area-publication-copy,
+.research-area-detail-page .research-area-overview :where(p, li, blockquote) {
+  text-align: justify !important;
+}
+
 .member-page-section-title {
   text-align: center !important;
   text-justify: auto;
