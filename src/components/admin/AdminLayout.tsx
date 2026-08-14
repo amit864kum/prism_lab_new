@@ -4,16 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import SafeImage from '@/components/ui/SafeImage'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 import {
   LayoutDashboard,
-  Image,
   FileText,
   Newspaper,
   BookOpen,
   Briefcase,
   Building2,
   Images,
-  User,
   Users,
   LogOut,
   Menu,
@@ -22,7 +21,8 @@ import {
   Code2
 } from 'lucide-react'
 
-const PRISM_ICON = '/uploads/logos/1781176012722-0v9lgt.png'
+const PRISM_ICON = '/images/prism-emblem.png'
+const IITP_LOGO = '/images/iitp-logo.png'
 
 interface SidebarItem {
   label: string
@@ -32,15 +32,14 @@ interface SidebarItem {
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Hero Slides', href: '/admin/hero-slides', icon: Image },
   { label: 'About Section', href: '/admin/about', icon: FileText },
   { label: 'News Items', href: '/admin/news', icon: Newspaper },
   { label: 'Research Areas', href: '/admin/research-areas', icon: Compass },
   { label: 'Projects', href: '/admin/projects', icon: Briefcase },
   { label: 'Sponsors', href: '/admin/sponsors', icon: Building2 },
   { label: 'Gallery', href: '/admin/gallery', icon: Images },
-  { label: 'PI Profile', href: '/admin/pi-profile', icon: User },
   { label: 'Members', href: '/admin/members', icon: Users },
+  { label: 'Member Publications', href: '/admin/member-publications', icon: FileText },
   { label: 'Publications', href: '/admin/publications', icon: BookOpen },
  { label: 'Developer', href: '/admin/developer', icon: Code2 }
 ]
@@ -70,12 +69,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="admin-shell min-h-screen bg-gray-50 flex dark:bg-slate-950 dark:text-slate-100">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 bg-slate-950 text-white border-r border-slate-800">
         <div className="h-[95px] flex items-center px-5 border-b border-slate-800 gap-4 bg-white text-slate-950">
-          <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden bg-white">
-            <SafeImage src={PRISM_ICON} alt="PRISM logo" className="h-full w-full object-contain" />
+          <span className="flex h-16 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#08265c]/20 bg-white p-1.5">
+            <SafeImage src={PRISM_ICON} alt="PRISM logo" className="h-full w-full rounded-full object-contain" />
           </span>
           <span className="min-w-0">
             <span className="block text-3xl font-black leading-none tracking-tight text-[#08265c]">PRISM</span>
@@ -135,7 +134,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <div className="h-20 flex items-center justify-between px-5 border-b border-slate-800 bg-white text-slate-950">
           <div className="flex items-center gap-3">
-            <SafeImage src={PRISM_ICON} alt="PRISM logo" className="h-12 w-12 object-contain" />
+            <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#08265c]/20 bg-white p-1">
+              <SafeImage src={PRISM_ICON} alt="PRISM logo" className="h-full w-full rounded-full object-contain" />
+            </span>
             <div>
               <span className="block text-xl font-black text-[#08265c]">PRISM</span>
               <span className="block text-[10px] font-semibold text-slate-600">Admin Panel</span>
@@ -191,9 +192,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Menu className="h-6 w-6" />
           </button>
           <span className="text-xl font-black text-[#08265c] tracking-tight">PRISM Admin</span>
-          <a href="https://www.iitp.ac.in" target="_blank" rel="noopener noreferrer" aria-label="Open IIT Patna website">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[#08265c] text-[11px] font-black text-[#08265c]">IITP</span>
-          </a>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a href="https://www.iitp.ac.in" target="_blank" rel="noopener noreferrer" aria-label="Open IIT Patna website">
+              <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-[#08265c] bg-white p-0.5">
+                <SafeImage src={IITP_LOGO} alt="IIT Patna logo" className="h-full w-full rounded-full object-contain" />
+              </span>
+            </a>
+          </div>
         </header>
 
         <header className="sticky top-0 z-20 hidden h-[95px] items-center justify-between border-b border-slate-200 bg-white/95 px-8 shadow-sm backdrop-blur-xl lg:flex">
@@ -203,15 +209,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               Academic Research Administration
             </h1>
           </div>
-          <a
-            href="https://www.iitp.ac.in"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open IIT Patna website"
-            className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <span className="flex h-full w-full items-center justify-center rounded-full border border-[#08265c] text-[11px] font-black text-[#08265c]">IITP</span>
-          </a>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <a
+              href="https://www.iitp.ac.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open IIT Patna website"
+              className="admin-brand-mark flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <SafeImage
+                src={IITP_LOGO}
+                alt="IIT Patna logo"
+                className="h-full w-full rounded-full object-contain"
+                loading="eager"
+              />
+            </a>
+          </div>
         </header>
 
         {/* Content Section */}

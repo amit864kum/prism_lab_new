@@ -8,6 +8,7 @@ export interface PublicationFilters {
   year?: number
   authorId?: string
   researchAreaId?: string
+  profileOnly?: boolean
 }
 
 function buildPublicationFilter(filters: PublicationFilters): Record<string, unknown> {
@@ -16,6 +17,8 @@ function buildPublicationFilter(filters: PublicationFilters): Record<string, unk
   if (filters.year) query.year = filters.year
   if (filters.authorId) query.authors = filters.authorId
   if (filters.researchAreaId) query.researchAreas = filters.researchAreaId
+  if (filters.profileOnly === true) query.profileOnly = true
+  if (filters.profileOnly === false) query.profileOnly = { $ne: true }
   return query
 }
 
@@ -44,9 +47,15 @@ export async function listPublications(
   return query.lean()
 }
 
-export async function getPublicationById(id: string, populate = false) {
+export async function getPublicationById(id: string, populate = false, profileOnly?: boolean) {
   await connectDB()
-  let query = Publication.findById(id)
+  const scopeFilter =
+    profileOnly === true
+      ? { profileOnly: true }
+      : profileOnly === false
+        ? { profileOnly: { $ne: true } }
+        : {}
+  let query = Publication.findOne({ _id: id, ...scopeFilter })
   if (populate) query = query.populate('authors').populate('researchAreas')
   return query.lean()
 }
@@ -57,9 +66,16 @@ export async function publicationSlugExists(slug: string, excludedId?: string) {
   return Boolean(await Publication.exists(filter))
 }
 
-export async function getNextPublicationDisplayOrder(type: PublicationType, excludedId?: string) {
+export async function getNextPublicationDisplayOrder(
+  type: PublicationType,
+  excludedId?: string,
+  profileOnly = false
+) {
   await connectDB()
-  const filter = excludedId ? { type, _id: { $ne: excludedId } } : { type }
+  const scopeFilter = profileOnly ? { profileOnly: true } : { profileOnly: { $ne: true } }
+  const filter = excludedId
+    ? { type, ...scopeFilter, _id: { $ne: excludedId } }
+    : { type, ...scopeFilter }
   const last = await Publication.findOne(filter).sort({ displayOrder: -1, year: -1 }).lean()
   return (last?.displayOrder || 0) + 1
 }
@@ -67,12 +83,14 @@ export async function getNextPublicationDisplayOrder(type: PublicationType, excl
 export async function shiftPublicationDisplayOrder(
   type: PublicationType,
   displayOrder: number,
-  excludedId?: string
+  excludedId?: string,
+  profileOnly = false
 ) {
   await connectDB()
+  const scopeFilter = profileOnly ? { profileOnly: true } : { profileOnly: { $ne: true } }
   const filter = excludedId
-    ? { type, displayOrder: { $gte: displayOrder }, _id: { $ne: excludedId } }
-    : { type, displayOrder: { $gte: displayOrder } }
+    ? { type, ...scopeFilter, displayOrder: { $gte: displayOrder }, _id: { $ne: excludedId } }
+    : { type, ...scopeFilter, displayOrder: { $gte: displayOrder } }
   await Publication.updateMany(filter, { $inc: { displayOrder: 1 } })
 }
 
@@ -110,5 +128,5 @@ export async function removeResearchAreaFromPublications(researchAreaId: string)
 
 export async function countPublications(type?: PublicationType) {
   await connectDB()
-  return Publication.countDocuments(type ? { type } : {})
+  return Publication.countDocuments({ ...(type ? { type } : {}), profileOnly: { $ne: true } })
 }

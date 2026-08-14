@@ -23,6 +23,7 @@ export interface IPublication {
   pdfUrl?: string
   externalUrl?: string
   tags: string[]
+  profileOnly: boolean
   createdAt: Date
   updatedAt: Date
 }

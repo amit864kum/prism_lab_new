@@ -1,6 +1,7 @@
 import PublicationsClient from '@/components/publications/PublicationsClient'
 import { normalizePublicationType } from '@/lib/publication-types'
 import { getPublicationsPageData } from '@/services/public-content.service'
+import { BookOpen, Layers3 } from 'lucide-react'
 
 // Force dynamic rendering to always fetch latest DB data
 export const dynamic = 'force-dynamic'
@@ -53,18 +54,32 @@ export default async function PublicationsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20">
-      {/* Title Banner */}
-      <div className="relative bg-slate-900 text-white overflow-hidden py-16 sm:py-20 border-b border-slate-800">
+      <div className="relative overflow-hidden border-b border-slate-800 bg-slate-900 py-16 text-white sm:py-20">
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl" />
+        <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="absolute -bottom-48 left-1/3 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-none">
-            Publications
-          </h1>
-          <p className="text-sm sm:text-base text-slate-405 max-w-xl font-medium">
-            Explore peer-reviewed articles, conference proceedings, workshop papers, book chapters, and academic theses published by members of Prism Research Lab.
-          </p>
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-end lg:px-8">
+          <div className="max-w-3xl">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-blue-200">
+              <BookOpen className="h-3.5 w-3.5" />
+              Research output
+            </div>
+            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Publications</h1>
+            <p className="mt-5 max-w-2xl text-sm font-medium leading-7 text-slate-300 sm:text-base">
+              Explore peer-reviewed articles, conference proceedings, book chapters, datasets, patents, and invited talks from PRISM Lab.
+            </p>
+          </div>
+
+          <div className="inline-flex w-fit items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.07] px-5 py-4 backdrop-blur">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/20 text-blue-300">
+              <Layers3 className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-2xl font-black">{serializedPublications.length}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Published works</p>
+            </div>
+          </div>
         </div>
       </div>
 

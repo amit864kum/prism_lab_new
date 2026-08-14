@@ -59,7 +59,7 @@ export default async function MemberProfilePage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2" />
               <div className="relative h-56 w-56 rounded-2xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex items-center justify-center mb-6">
                 {member.imageUrl ? (
                   <SafeImage
@@ -78,21 +78,21 @@ export default async function MemberProfilePage({ params }: PageProps) {
                 {MEMBER_ROLE_LABELS[member.role as MemberRole] || member.role}
               </p>
 
-              <div className="relative w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 text-xs text-slate-600 dark:text-slate-400 font-semibold">
+              <div className="relative z-10 w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 text-xs text-slate-600 dark:text-slate-400 font-semibold">
                 {member.email && (
-                  <a href={`mailto:${member.email}`} className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition min-w-0">
+                  <a href={`mailto:${member.email}`} className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition min-w-0">
                     <Mail className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span className="break-all min-w-0">{member.email}</span>
                   </a>
                 )}
                 {member.linkedinUrl && (
-                  <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition">
+                  <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition">
                     <ExternalLink className="h-4.5 w-4.5 text-slate-400" />
                     <span>LinkedIn Profile</span>
                   </a>
                 )}
                 {member.googleScholarUrl && (
-                  <a href={member.googleScholarUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition">
+                  <a href={member.googleScholarUrl} target="_blank" rel="noopener noreferrer" className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition">
                     <GraduationCap className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span>Google Scholar Profile</span>
                   </a>
@@ -102,20 +102,20 @@ export default async function MemberProfilePage({ params }: PageProps) {
                     href={member.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
+                    className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
                   >
                     <Github className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span>GitHub Profile</span>
                   </a>
                 )}
                 {member.personalPortfolioWebsite && (
-                  <a href={member.personalPortfolioWebsite} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 dark:border-slate-800 hover:border-blue-300 hover:text-blue-600 font-bold text-xs rounded-xl transition">
+                  <a href={member.personalPortfolioWebsite} target="_blank" rel="noopener noreferrer" className="relative z-20 inline-flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 dark:border-slate-800 hover:border-blue-300 hover:text-blue-600 font-bold text-xs rounded-xl transition">
                     <Globe className="h-4 w-4" />
                     Visit Website
                   </a>
                 )}
                 {member.resumePdf && (
-                  <a href={member.resumePdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                  <a href={member.resumePdf} target="_blank" rel="noopener noreferrer" className="relative z-20 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
                     <FileText className="h-4 w-4" />
                     Download Resume
                   </a>
@@ -125,6 +125,27 @@ export default async function MemberProfilePage({ params }: PageProps) {
           </aside>
 
           <main className="lg:col-span-8 space-y-8">
+            {(member.status === 'alumni' || member.status === 'completed') && (
+              <section className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-slate-900">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                    Thesis Title
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                    {member.thesisTitle || 'Not provided'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-slate-900">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                    Current Position
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                    {member.currentPosition || 'Not provided'}
+                  </p>
+                </div>
+              </section>
+            )}
+
             <section className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-500" />

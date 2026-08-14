@@ -1,6 +1,6 @@
-import { handleApiError } from '@/lib/errors/api-error'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
+import { handleApiError } from '@/lib/errors/api-error'
 import { publicationSchema } from '@/validators/publication'
 import {
   editScopedPublication,
@@ -9,20 +9,23 @@ import {
 } from '@/services/publication.service'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const publication = await getScopedPublication(id, false)
-
-    if (!publication) {
-      return NextResponse.json({ error: 'Publication not found' }, { status: 404 })
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+    const publication = await getScopedPublication(id, true)
+    if (!publication) {
+      return NextResponse.json({ error: 'Member publication not found' }, { status: 404 })
+    }
     return NextResponse.json({ publication })
   } catch (error) {
-    return handleApiError(error, 'get.publication')
+    return handleApiError(error, 'get.member.publication')
   }
 }
 
@@ -38,8 +41,11 @@ export async function PUT(
 
     const { id } = await params
     const body = await request.json()
-    const validationResult = publicationSchema.safeParse({ ...body, profileOnly: false })
-
+    const validationResult = publicationSchema.safeParse({
+      ...body,
+      profileOnly: true,
+      researchAreas: [],
+    })
     if (!validationResult.success) {
       return NextResponse.json(
         { error: 'Invalid input', details: validationResult.error.issues },
@@ -47,9 +53,9 @@ export async function PUT(
       )
     }
 
-    const result = await editScopedPublication(id, validationResult.data, false)
+    const result = await editScopedPublication(id, validationResult.data, true)
     if (result.notFound) {
-      return NextResponse.json({ error: 'Publication not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Member publication not found' }, { status: 404 })
     }
     if (result.conflict) {
       return NextResponse.json(
@@ -57,15 +63,14 @@ export async function PUT(
         { status: 409 }
       )
     }
-
     return NextResponse.json({ publication: result.publication })
   } catch (error) {
-    return handleApiError(error, 'update.publication')
+    return handleApiError(error, 'update.member.publication')
   }
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -75,14 +80,12 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const publication = await removeScopedPublication(id, false)
-
+    const publication = await removeScopedPublication(id, true)
     if (!publication) {
-      return NextResponse.json({ error: 'Publication not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Member publication not found' }, { status: 404 })
     }
-
     return NextResponse.json({ success: true })
   } catch (error) {
-    return handleApiError(error, 'delete.publication')
+    return handleApiError(error, 'delete.member.publication')
   }
 }

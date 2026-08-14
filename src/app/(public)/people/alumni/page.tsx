@@ -19,10 +19,12 @@ interface AlumniGroup {
 }
 
 export default async function AlumniPage() {
-  const alumni = await getPublicMembers(
+  const allAlumni = await getPublicMembers(
     { statuses: ['alumni', 'completed'] },
     { sort: { yearLeft: -1, role: 1, displayOrder: 1, name: 1 } }
   )
+  const alumni = allAlumni.filter((member) => member.role !== 'Intern')
+  const alumniRoles = MEMBER_ROLES.filter((role) => role !== 'Intern')
 
   // Group alumni by yearLeft (default to 'Unspecified' if missing)
   const groupedAlumni: Record<string | number, any[]> = {}
@@ -60,7 +62,7 @@ export default async function AlumniPage() {
             Lab Alumni
           </h1>
           <p className="text-sm sm:text-base text-slate-405 max-w-xl font-medium">
-            Celebrating the journeys and destinations of our graduated scholars and research interns.
+            Celebrating the journeys and destinations of our graduated scholars and students.
           </p>
         </div>
       </div>
@@ -81,7 +83,7 @@ export default async function AlumniPage() {
                 </h2>
               </div>
 
-              {MEMBER_ROLES.map((role) => {
+              {alumniRoles.map((role) => {
                 const roleMembers = group.members.filter((member) => member.role === role)
                 if (roleMembers.length === 0) return null
 
@@ -96,7 +98,7 @@ export default async function AlumniPage() {
                           key={member._id.toString()}
                           className="bg-white dark:bg-slate-900 border border-slate-200/55 dark:border-slate-800/55 rounded-2xl p-5 flex flex-col justify-between items-center text-center shadow-sm hover:shadow-md transition duration-300 group relative overflow-hidden"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                           <div className="w-full flex flex-col items-center space-y-4">
                             <div className="h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-55 dark:bg-slate-950 flex items-center justify-center relative">
@@ -125,6 +127,25 @@ export default async function AlumniPage() {
                                 </p>
                               )}
                             </div>
+
+                            <dl className="w-full space-y-3 border-t border-slate-100 pt-4 text-left dark:border-slate-800">
+                              <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">
+                                  Thesis Title
+                                </dt>
+                                <dd className="mt-1 text-xs font-semibold leading-5 text-slate-700 dark:text-slate-300">
+                                  {member.thesisTitle || 'Not provided'}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt className="text-[9px] font-black uppercase tracking-[0.16em] text-indigo-600 dark:text-indigo-400">
+                                  Current Position
+                                </dt>
+                                <dd className="mt-1 text-xs font-semibold leading-5 text-slate-700 dark:text-slate-300">
+                                  {member.currentPosition || 'Not provided'}
+                                </dd>
+                              </div>
+                            </dl>
                           </div>
 
                           <div className="w-full mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 z-10">
@@ -159,7 +180,7 @@ export default async function AlumniPage() {
                             </div>
 
                             <Link href={`/people/current-members/${member.slug || member._id.toString()}`} className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
-                              Profile
+                              View Profile
                               <ExternalLink className="h-3 w-3" />
                             </Link>
                           </div>

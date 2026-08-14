@@ -1,373 +1,280 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Search, GraduationCap, User, ArrowUpRight, Globe } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ArrowUpRight, BookOpen, ExternalLink, Search, User, Users } from 'lucide-react'
 import SafeImage from '@/components/ui/SafeImage'
-import { MEMBER_ROLES, MEMBER_ROLE_LABELS, type MemberRole } from '@/lib/member-options'
+import type { MemberRole } from '@/lib/member-options'
 import type { MemberListViewModel } from './member-list.view-model'
 
 type Member = MemberListViewModel
 
 interface ClientProps {
-  initialMembers: MemberListViewModel[]
+  initialMembers: Member[]
 }
 
-type TabType = 'All' | MemberRole
-
-/* ─── Role ordering & display ─── */
-
-const ROLE_ORDER: MemberRole[] = [
-  'PhD Scholar',
-  'Masters Student',
-  'Undergraduate',
-  'Research Assistant',
-  'Intern',
+const DISPLAY_ROLES: Array<{ role: MemberRole; title: string }> = [
+  { role: 'PhD Scholar', title: 'PhD Students' },
+  { role: 'Masters Student', title: 'M.Tech Students' },
+  { role: 'Undergraduate', title: 'B.Tech Students' },
+  { role: 'Research Assistant', title: 'Research Assistants' },
 ]
 
-const ROLE_SECTION_LABELS: Record<MemberRole, string> = {
-  'PhD Scholar': 'PhD Scholars',
-  'Masters Student': 'M.Tech Students',
-  Undergraduate: 'B.Tech Students',
-  'Research Assistant': 'Research Assistants',
-  Intern: 'Interns',
-}
-
-const ROLE_NEEDS_YEAR: MemberRole[] = [
-  'Masters Student',
-  'Undergraduate',
-  'Intern',
-]
-
-/* ─── Section sub-component (avoids hooks inside loops) ─── */
-
-interface RoleSectionProps {
-  role: MemberRole
-  ongoingMembers: Member[]
-  completedMembers: Member[]
-  renderCards: (members: Member[]) => React.ReactNode
-}
-
-function RoleSection({ role, ongoingMembers, completedMembers, renderCards }: RoleSectionProps) {
-  const [view, setView] = useState<'ongoing' | 'completed'>('ongoing')
-  const [selectedYear, setSelectedYear] = useState<number | null>(null)
-
-  const hasOngoing = ongoingMembers.length > 0
-  const hasCompleted = completedMembers.length > 0
-  const needsYear = ROLE_NEEDS_YEAR.includes(role)
-
-  const activeMembers = view === 'ongoing' ? ongoingMembers : completedMembers
-
-  // Available years for year-filtered roles, sorted descending
-  const availableYears = useMemo(() => {
-    if (!needsYear) return []
-    const yearSet = new Set<number>()
-    for (const m of activeMembers) {
-      if (m.yearJoined != null) yearSet.add(m.yearJoined)
-    }
-    return Array.from(yearSet).sort((a, b) => b - a)
-  }, [needsYear, activeMembers])
-
-  // Auto-select latest year when view toggles or when available years change
-  useEffect(() => {
-    if (!needsYear) return
-    if (availableYears.length === 0) {
-      setSelectedYear(null)
-      return
-    }
-    if (selectedYear === null || !availableYears.includes(selectedYear)) {
-      setSelectedYear(availableYears[0])
-    }
-  }, [needsYear, availableYears, selectedYear])
-
-  // Members to display (filtered by year for year-roles, or all for flat roles)
-  const displayMembers = useMemo(() => {
-    if (!needsYear || selectedYear === null) return activeMembers
-    return activeMembers.filter((m) => m.yearJoined === selectedYear)
-  }, [needsYear, selectedYear, activeMembers])
-
-  // Nothing to show
-  if (!hasOngoing && !hasCompleted) return null
+function MemberImage({ member, className }: { member: Member; className: string }) {
+  if (!member.imageUrl) {
+    return (
+      <div className={`flex items-center justify-center bg-slate-100 dark:bg-slate-950 ${className}`}>
+        <User className="h-16 w-16 text-slate-400" />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-5">
-      {/* ── Section Header ── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            {ROLE_SECTION_LABELS[role]}
-          </h2>
-          <div className="mt-2 h-1 w-12 rounded-full bg-blue-600" />
+    <SafeImage
+      src={member.imageUrl}
+      alt={member.name}
+      className={`${className} object-cover object-top transition duration-500 group-hover:scale-[1.035]`}
+      fallback={
+        <div className={`flex items-center justify-center bg-slate-100 dark:bg-slate-950 ${className}`}>
+          <User className="h-16 w-16 text-slate-400" />
         </div>
+      }
+    />
+  )
+}
 
-        {/* Ongoing / Completed Toggle */}
-        <div className="inline-flex rounded-2xl bg-slate-100 dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-800">
-          <button
-            onClick={() => setView('ongoing')}
-            className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
-              view === 'ongoing'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
-          >
-            Ongoing
-          </button>
+function CurrentMemberCard({ member, index }: { member: Member; index: number }) {
+  const profileHref = `/people/current-members/${member.slug || member._id}`
 
-          {hasCompleted && (
-            <button
-              onClick={() => setView('completed')}
-              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
-                view === 'completed'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-            >
-              Completed
-            </button>
-          )}
-        </div>
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.2) }}
+      className="group relative overflow-hidden rounded-[1.75rem] border border-slate-200/90 bg-white p-3 shadow-[0_15px_40px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-300 hover:shadow-[0_26px_65px_rgba(37,99,235,0.15)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-700"
+    >
+      <Link
+        href={profileHref}
+        aria-label={`Open ${member.name}'s profile`}
+        className="absolute inset-0 z-10 rounded-[1.75rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+      >
+        <span className="sr-only">Open {member.name}&apos;s profile</span>
+      </Link>
+
+      <div className="h-72 overflow-hidden rounded-[1.3rem] border border-slate-100 bg-slate-100 dark:border-slate-800 dark:bg-slate-950 sm:h-80">
+        <MemberImage member={member} className="h-full w-full" />
       </div>
 
-      {/* ── Year Buttons (M.Tech / B.Tech / Intern only) ── */}
-      {needsYear && availableYears.length > 0 && (
-        <div className="flex flex-wrap gap-2 overflow-x-auto pb-1 -mb-1">
-          {availableYears.map((year) => (
-            <button
-              key={year}
-              onClick={() => setSelectedYear(year)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold tabular-nums transition-all duration-200 whitespace-nowrap border ${
-                selectedYear === year
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-sm'
-                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="px-3 pb-3 pt-5 text-center">
+        <h3 className="member-card-name text-xl font-black tracking-tight text-slate-950 transition-colors group-hover:text-blue-700 dark:text-white dark:group-hover:text-blue-300">
+          {member.name}
+        </h3>
+        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-black text-blue-700 dark:text-blue-300">
+          View Profile
+          <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
+      </div>
+    </motion.article>
+  )
+}
 
-      {/* ── Cards or Empty State ── */}
-      {activeMembers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-12 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">
-            No {view === 'ongoing' ? 'ongoing' : 'completed'} {MEMBER_ROLE_LABELS[role].toLowerCase()} members found.
-          </p>
+function AlumniCard({ member, index }: { member: Member; index: number }) {
+  const profileHref = `/people/current-members/${member.slug || member._id}`
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.2) }}
+      className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_16px_45px_rgba(15,23,42,0.07)] transition-all duration-300 hover:-translate-y-1 hover:border-indigo-300 hover:shadow-[0_25px_60px_rgba(79,70,229,0.13)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700"
+    >
+      <div className="grid min-h-full sm:grid-cols-[11rem_1fr]">
+        <div className="h-64 overflow-hidden bg-slate-100 dark:bg-slate-950 sm:h-full sm:min-h-64">
+          <MemberImage member={member} className="h-full w-full" />
         </div>
-      ) : needsYear && displayMembers.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-12 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 italic">
-            No {view === 'ongoing' ? 'ongoing' : 'completed'} {MEMBER_ROLE_LABELS[role].toLowerCase()} members found for {selectedYear}.
-          </p>
+        <div className="flex flex-col justify-center p-6 sm:p-7">
+          <h3 className="member-alumni-name text-xl font-black tracking-tight text-slate-950 dark:text-white">
+            {member.name}
+          </h3>
+          <dl className="mt-5 space-y-4">
+            <div>
+              <dt className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                Thesis Title
+              </dt>
+              <dd className="mt-1.5 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                {member.thesisTitle || 'Not provided'}
+              </dd>
+            </div>
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <dt className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                Current Position
+              </dt>
+              <dd className="mt-1.5 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                {member.currentPosition || 'Not provided'}
+              </dd>
+            </div>
+          </dl>
+          <Link
+            href={profileHref}
+            className="mt-6 inline-flex w-fit items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:hover:text-slate-950 dark:focus-visible:ring-offset-slate-900"
+          >
+            View Profile
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
         </div>
-      ) : (
-        renderCards(displayMembers)
-      )}
+      </div>
+    </motion.article>
+  )
+}
+
+function SectionTitle({ title }: { title: string }) {
+  return (
+    <div className="w-full text-center">
+      <h2 className="member-page-section-title w-full text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+        {title}
+      </h2>
+      <div className="mx-auto mt-4 h-1 w-14 rounded-full bg-gradient-to-r from-blue-600 to-cyan-400" />
     </div>
   )
 }
 
-/* ─── Main Component ─── */
+function RoleHeading({ title, count }: { title: string; count: number }) {
+  return (
+    <div className="flex flex-col items-center justify-center text-center">
+      <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{title}</h3>
+      <span className="mt-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
+        {count} member{count === 1 ? '' : 's'}
+      </span>
+    </div>
+  )
+}
 
 export default function CurrentMembersClient({ initialMembers }: ClientProps) {
-  const [members] = useState<Member[]>(initialMembers)
   const [search, setSearch] = useState('')
-  const [activeTab, setActiveTab] = useState<TabType>('All')
+  const query = search.trim().toLowerCase()
 
-  /* ── Filtering ── */
-
-  const filteredMembers = useMemo(() => {
-    return members.filter((m) => {
-      const matchesSearch =
-        m.name.toLowerCase().includes(search.toLowerCase()) ||
-        (m.bio && m.bio.toLowerCase().includes(search.toLowerCase())) ||
-        m.role.toLowerCase().includes(search.toLowerCase())
-
-      const matchesTab = activeTab === 'All' ? true : m.role === activeTab
-
-      return matchesSearch && matchesTab
-    })
-  }, [members, search, activeTab])
-
-  const currentMembers = useMemo(
-    () => filteredMembers.filter((member) => member.status === 'current'),
-    [filteredMembers]
+  const visibleMembers = useMemo(
+    () =>
+      initialMembers.filter(
+        (member) =>
+          member.role !== 'Intern' &&
+          (!query ||
+            `${member.name} ${member.role} ${member.thesisTitle} ${member.currentPosition}`
+              .toLowerCase()
+              .includes(query))
+      ),
+    [initialMembers, query]
   )
 
-  const completedMembers = useMemo(
-    () => filteredMembers.filter((member) => member.status === 'completed' || member.status === 'alumni'),
-    [filteredMembers]
+  const currentMembers = visibleMembers.filter((member) => member.status === 'current')
+  const alumniMembers = visibleMembers.filter(
+    (member) => member.status === 'alumni' || member.status === 'completed'
   )
-
-  /* ── Helpers ── */
-
-  const plainText = (value?: string) =>
-    value ? value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : ''
-
-  /* ── Card renderer ── */
-
-  const renderCards = (membersList: Member[]) => {
-
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        <AnimatePresence mode="popLayout">
-          {membersList.map((member) => {
-            const researchArea = plainText(member.bio).slice(0, 96)
-
-            return (
-              <motion.div
-                key={member._id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white dark:bg-slate-900 border border-slate-200/55 dark:border-slate-800/55 rounded-2xl p-5 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between items-center text-center relative group overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div className="w-full flex flex-col items-center space-y-4">
-                  <div className="h-28 w-28 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center relative shadow-inner">
-                    {member.imageUrl ? (
-                      <SafeImage
-                        src={member.imageUrl}
-                        alt={member.name}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        fallback={
-                          <User className="h-10 w-10 text-slate-400" />
-                        }
-                      />
-                    ) : (
-                      <User className="h-10 w-10 text-slate-400" />
-                    )}
-                  </div>
-
-                  <div className="space-y-1 w-full">
-                    <h3 className="font-extrabold text-slate-955 dark:text-white text-base leading-tight truncate px-1">
-                      {member.name}
-                    </h3>
-
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                      {MEMBER_ROLE_LABELS[member.role]}
-                    </p>
-
-                    {researchArea && (
-                      <p className="text-[11px] font-medium leading-relaxed text-slate-500 line-clamp-2">
-                        {researchArea}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="w-full mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-                  <div className="flex gap-2">
-                    {member.linkedinUrl && (
-                      <a
-                        href={member.linkedinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Globe className="h-4 w-4 text-slate-400 hover:text-blue-600 transition-colors" />
-                      </a>
-                    )}
-                  </div>
-
-                 <Link
-  href={`/people/current-members/${member.slug || member._id}`}
-  className="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 hover:underline"
->
-                    View Bio
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-              </motion.div>
-            )
-          })}
-        </AnimatePresence>
-      </div>
-    )
-  }
-
-  /* ── Role sections renderer ── */
-
-  const renderRoleGroups = () => {
-    const rolesToRender = activeTab === 'All' ? ROLE_ORDER : ROLE_ORDER.filter((r) => r === activeTab)
-
-    return (
-      <div className="space-y-14">
-        {rolesToRender.map((role) => {
-          const ongoing = currentMembers.filter((m) => m.role === role)
-          const completed = completedMembers.filter((m) => m.role === role)
-
-          if (ongoing.length === 0 && completed.length === 0) return null
-
-          return (
-            <RoleSection
-              key={role}
-              role={role}
-              ongoingMembers={ongoing}
-              completedMembers={completed}
-              renderCards={renderCards}
-            />
-          )
-        })}
-      </div>
-    )
-  }
 
   return (
-    <>
-      <div className="space-y-8">
-        {/* Header Controls */}
-        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-5">
-          {/* Search + Role Tabs */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* Role Tabs */}
-            <div className="flex flex-wrap gap-2">
-              {(['All', ...MEMBER_ROLES] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
-                    activeTab === tab
-                      ? 'bg-blue-600 text-white shadow'
-                      : 'bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {tab === 'All'
-                    ? 'All'
-                    : MEMBER_ROLE_LABELS[tab]}
-                </button>
-              ))}
-            </div>
-
-            {/* Search */}
-            <div className="relative w-full lg:max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-              <input
-                type="text"
-                placeholder="Search members..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 py-3 pl-10 pr-4 text-sm font-medium outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
+    <div className="space-y-20">
+      <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 text-slate-950 shadow-[0_24px_70px_rgba(15,23,42,0.09)] dark:border-slate-800 dark:bg-slate-900 dark:text-white sm:p-9">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.07),transparent_42%)] dark:bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.1),transparent_42%)]" />
+        <div className="relative mx-auto flex max-w-xl flex-col items-center text-center">
+          <h2 className="text-lg font-black uppercase tracking-[0.2em] text-blue-700 dark:text-blue-300 sm:text-xl">
+            Guide / Supervisor
+          </h2>
+          <div className="mt-6 h-56 w-56 overflow-hidden rounded-3xl border-4 border-white bg-slate-100 shadow-[0_20px_50px_rgba(15,23,42,0.18)] ring-1 ring-slate-200 dark:border-slate-800 dark:bg-slate-950 dark:ring-slate-700 sm:h-64 sm:w-64">
+            <SafeImage
+              src="/uploads/pi/1780654541451-x1uxeg.jpg"
+              alt="Dr. Satendra Kumar"
+              className="h-full w-full object-cover object-top transition duration-500 hover:scale-105"
+              fallback={
+                <div className="flex h-full w-full items-center justify-center bg-slate-800">
+                  <User className="h-20 w-20 text-slate-500" />
+                </div>
+              }
+            />
           </div>
+          <h3 className="mt-6 text-3xl font-black tracking-tight sm:text-4xl">Dr. Satendra Kumar</h3>
+          <a
+            href="https://www.iitp.ac.in/~satendra/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-400 dark:hover:text-slate-950 dark:focus-visible:ring-offset-slate-900"
+          >
+            Visit faculty profile
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <p className="mt-4 max-w-md text-sm font-medium leading-6 text-slate-600 dark:text-slate-300">
+            Assistant Professor, Department of Computer Science and Engineering, IIT Patna.
+          </p>
+        </div>
+      </section>
+
+      <section className="space-y-12">
+        <div className="mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <Users className="ml-1 h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <label className="relative flex-1">
+            <span className="sr-only">Search members</span>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search current members or alumni..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm font-medium outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+            />
+          </label>
         </div>
 
-        {/* Directory Grid */}
-        {filteredMembers.length === 0 ? (
-          <div className="rounded-3xl border border-slate-200/55 dark:border-slate-800/55 bg-white dark:bg-slate-900 py-24 text-center text-slate-500 italic">
-            No team members matched your search or selected filter.
+        <SectionTitle title="Current Member" />
+
+        <div className="space-y-16">
+          {DISPLAY_ROLES.map(({ role, title }) => {
+            const members = currentMembers.filter((member) => member.role === role)
+            if (members.length === 0) return null
+            return (
+              <div key={role} className="space-y-7">
+                <RoleHeading title={title} count={members.length} />
+                <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {members.map((member, index) => (
+                    <CurrentMemberCard key={member._id} member={member} index={index} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {alumniMembers.length > 0 && (
+        <section className="space-y-12 rounded-[2.25rem] border border-slate-200 bg-gradient-to-b from-white to-indigo-50/40 px-5 py-12 shadow-sm dark:border-slate-800 dark:from-slate-950 dark:to-indigo-950/20 sm:px-8">
+          <SectionTitle title="Alumni" />
+          <div className="space-y-16">
+            {DISPLAY_ROLES.map(({ role, title }) => {
+              const members = alumniMembers.filter((member) => member.role === role)
+              if (members.length === 0) return null
+              return (
+                <div key={role} className="space-y-7">
+                  <RoleHeading title={title} count={members.length} />
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    {members.map((member, index) => (
+                      <AlumniCard key={member._id} member={member} index={index} />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        ) : (
-          <section className="space-y-8">
-            {renderRoleGroups()}
-          </section>
-        )}
-      </div>
-    </>
+        </section>
+      )}
+
+      {currentMembers.length === 0 && alumniMembers.length === 0 && (
+        <div className="rounded-3xl border border-dashed border-slate-300 py-20 text-center dark:border-slate-700">
+          <BookOpen className="mx-auto h-8 w-8 text-slate-400" />
+          <p className="mt-3 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            No members match your search.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }

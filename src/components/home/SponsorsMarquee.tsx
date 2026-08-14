@@ -28,20 +28,22 @@ const CorporateFallback = () => (
 
 function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
   return (
-    <div className="flex items-center gap-3 shrink-0 select-none group px-5 py-3 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md transition duration-300">
-      <div className="h-12 w-20 relative bg-slate-100 dark:bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center p-2 border border-slate-200 dark:border-slate-800">
+    <article className="group relative flex min-h-52 select-none flex-col items-center justify-center px-6 py-7 text-center">
+      <div className="pointer-events-none absolute inset-4 scale-95 rounded-[2rem] bg-blue-500/[0.04] opacity-0 blur-sm transition duration-300 group-hover:scale-100 group-hover:opacity-100 dark:bg-blue-400/[0.06]" />
+      <div className="relative flex h-28 w-full max-w-52 items-center justify-center p-3 transition duration-300 group-hover:-translate-y-1">
         <SafeImage
           src={sponsor.logoUrl}
           alt={sponsor.name}
-          className="max-h-full max-w-full object-contain"
+          className="h-full w-full object-contain"
           fallback={<CorporateFallback />}
         />
       </div>
 
-      <span className="text-base font-semibold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+      <span className="relative mt-5 h-px w-10 bg-slate-200 transition-all duration-300 group-hover:w-16 group-hover:bg-blue-400 dark:bg-slate-700" />
+      <h3 className="relative mt-4 text-sm font-extrabold leading-6 tracking-wide text-slate-700 transition-colors group-hover:text-blue-700 dark:text-slate-300 dark:group-hover:text-blue-300 sm:text-base">
         {sponsor.name}
-      </span>
-    </div>
+      </h3>
+    </article>
   )
 }
 
@@ -52,45 +54,21 @@ export default function SponsorsMarquee({
 }) {
   if (sponsors.length === 0) return null
 
-  const shouldMarquee = sponsors.length > 5
-
-  // CENTERED MODE (1–5 sponsors)
-  if (!shouldMarquee) {
-    return (
-      <div className="w-full py-10 bg-slate-50 dark:bg-slate-900/10 border-y border-slate-100 dark:border-slate-850">
-        <div className="flex flex-wrap justify-center items-center gap-8 px-6">
-          {sponsors.map((sponsor, index) => (
-            <SponsorCard key={index} sponsor={sponsor} />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  // MARQUEE MODE (6+ sponsors)
   return (
-    <div className="relative w-full overflow-hidden py-8 bg-slate-50 dark:bg-slate-900/10 border-y border-slate-100 dark:border-slate-850 flex">
-      {/* Track 1 */}
-      <div className="flex animate-marquee gap-12 pr-12 items-center shrink-0">
-        {sponsors.map((sponsor, index) => (
-          <SponsorCard key={index} sponsor={sponsor} />
-        ))}
-      </div>
-
-      {/* Track 2 */}
+    <div className="px-5 sm:px-8 lg:px-12">
       <div
-        className="flex animate-marquee gap-12 pr-12 items-center shrink-0"
-        aria-hidden="true"
+        className={`mx-auto grid divide-y divide-slate-200/80 dark:divide-slate-800/80 ${
+          sponsors.length === 1
+            ? 'max-w-sm grid-cols-1'
+            : sponsors.length === 2
+              ? 'max-w-2xl grid-cols-1 sm:grid-cols-2 sm:divide-x sm:divide-y-0'
+              : 'max-w-5xl grid-cols-1 sm:grid-cols-2 sm:[&>*:nth-child(even)]:border-l sm:[&>*:nth-child(even)]:border-slate-200/80 sm:dark:[&>*:nth-child(even)]:border-slate-800/80 lg:grid-cols-3 lg:[&>*]:border-l lg:[&>*]:border-slate-200/80 lg:[&>*:nth-child(3n+1)]:border-l-0 lg:dark:[&>*]:border-slate-800/80'
+        }`}
       >
-        {sponsors.map((sponsor, index) => (
-          <SponsorCard key={`dup-${index}`} sponsor={sponsor} />
+        {sponsors.map((sponsor) => (
+          <SponsorCard key={`${sponsor.name}-${sponsor.logoUrl}`} sponsor={sponsor} />
         ))}
       </div>
-
-      {/* Edge fade */}
-      <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-slate-50 dark:from-slate-950 to-transparent pointer-events-none z-10" />
-
-      <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-slate-50 dark:from-slate-950 to-transparent pointer-events-none z-10" />
     </div>
   )
 }

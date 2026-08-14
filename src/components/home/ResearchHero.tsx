@@ -155,7 +155,7 @@ export default function ResearchHero({
               IIT Patna Research Lab
             </div>
 
-            <h1 className="text-[clamp(2.8rem,min(4.7vw,7.5vh),5.2rem)] font-black leading-[0.88] tracking-tight text-white">
+            <h1 className="landing-heading-left text-[clamp(2.8rem,min(4.7vw,7.5vh),5.2rem)] font-black leading-[0.88] tracking-tight text-white">
               Pervasive &<br />
               Intelligent<br />
               <span className="bg-gradient-to-r from-cyan-200 via-sky-400 to-blue-500 bg-clip-text text-transparent">

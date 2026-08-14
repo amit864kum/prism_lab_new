@@ -102,6 +102,11 @@ const publicationSchema = new Schema<IPublication>(
         trim: true,
       },
     ],
+    profileOnly: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   {
     timestamps: true,
@@ -112,6 +117,7 @@ const publicationSchema = new Schema<IPublication>(
 publicationSchema.index({ year: -1, createdAt: -1 })
 publicationSchema.index({ type: 1, displayOrder: 1, year: -1 })
 publicationSchema.index({ researchAreas: 1 })
+publicationSchema.index({ profileOnly: 1, type: 1, displayOrder: 1 })
 // Note: slug index is auto-created by unique:true in field definition
 
 // Validation: authors array must not be empty
@@ -119,8 +125,22 @@ publicationSchema.path('authors').validate(function (authors: Types.ObjectId[]) 
   return authors && authors.length > 0
 }, 'At least one author is required')
 
+const existingPublicationModel = mongoose.models.Publication as Model<IPublication> | undefined
+
+// Next.js development reloads can retain a previously compiled Mongoose model.
+// Add the scope field to that retained schema so profile-only records are not
+// silently saved as global publications until the dev server is restarted.
+if (existingPublicationModel && !existingPublicationModel.schema.path('profileOnly')) {
+  existingPublicationModel.schema.add({
+    profileOnly: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+  })
+}
+
 const Publication: Model<IPublication> =
-  mongoose.models.Publication ||
-  mongoose.model<IPublication>('Publication', publicationSchema)
+  existingPublicationModel || mongoose.model<IPublication>('Publication', publicationSchema)
 
 export default Publication

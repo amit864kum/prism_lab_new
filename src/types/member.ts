@@ -12,6 +12,8 @@ export interface IMember {
   yearLeft?: number
   imageUrl?: string
   bio?: string
+  thesisTitle?: string
+  currentPosition?: string
   email?: string
   linkedinUrl?: string
   googleScholarUrl?: string

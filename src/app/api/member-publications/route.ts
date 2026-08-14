@@ -1,34 +1,30 @@
-import { handleApiError } from '@/lib/errors/api-error'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import { publicationSchema } from '@/validators/publication'
-import { normalizePublicationType } from '@/lib/publication-types'
-import { addScopedPublication, getPublications } from '@/services/publication.service'
+import { handleApiError } from '@/lib/errors/api-error'
 import { paginateResults, parsePagination } from '@/lib/pagination'
+import { publicationSchema } from '@/validators/publication'
+import { addScopedPublication, getPublications } from '@/services/publication.service'
 
-// GET all publications (public)
 export async function GET(request: NextRequest) {
   try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type')
-    const year = searchParams.get('year')
     const paginationOptions = parsePagination(searchParams)
     const results = await getPublications(
-      {
-        type: type ? normalizePublicationType(type) : undefined,
-        year: year ? Number.parseInt(year, 10) : undefined,
-        profileOnly: false,
-      },
+      { profileOnly: true },
       { limit: paginationOptions.queryLimit, skip: paginationOptions.skip }
     )
     const { items: publications, pagination } = paginateResults(results, paginationOptions)
     return NextResponse.json({ publications, pagination })
   } catch (error) {
-    return handleApiError(error, 'get.publications')
+    return handleApiError(error, 'get.member.publications')
   }
 }
 
-// POST create publication (admin only)
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -37,7 +33,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validationResult = publicationSchema.safeParse({ ...body, profileOnly: false })
+    const validationResult = publicationSchema.safeParse({
+      ...body,
+      profileOnly: true,
+      researchAreas: [],
+    })
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await addScopedPublication(validationResult.data, false)
+    const result = await addScopedPublication(validationResult.data, true)
     if (result.conflict) {
       return NextResponse.json(
         { error: 'A publication with this slug already exists' },
@@ -56,6 +56,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ publication: result.publication }, { status: 201 })
   } catch (error) {
-    return handleApiError(error, 'create.publication')
+    return handleApiError(error, 'create.member.publication')
   }
 }

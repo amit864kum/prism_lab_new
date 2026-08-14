@@ -29,6 +29,7 @@ export const publicationSchema = z.object({
   pdfUrl: z.string().optional().or(z.literal('')),
   externalUrl: z.string().url('Invalid external link').optional().or(z.literal('')),
   tags: z.array(z.string()).default([]),
+  profileOnly: z.boolean().optional().default(false),
 }).superRefine((data, ctx) => {
   if (data.type === 'journal' && !data.journalName?.trim() && !data.venue?.trim()) {
     ctx.addIssue({

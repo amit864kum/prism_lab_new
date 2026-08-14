@@ -19,11 +19,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: `${baseUrl}/research/projects`, lastModified: new Date() },
       { url: `${baseUrl}/research/sponsors`, lastModified: new Date() },
       { url: `${baseUrl}/publications`, lastModified: new Date() },
-      { url: `${baseUrl}/people/principal-investigator`, lastModified: new Date() },
       { url: `${baseUrl}/people/current-members`, lastModified: new Date() },
       { url: `${baseUrl}/people/alumni`, lastModified: new Date() },
       { url: `${baseUrl}/people/collaborators`, lastModified: new Date() },
-      { url: `${baseUrl}/gallery`, lastModified: new Date() },
     ]
 
     // Add dynamic research areas

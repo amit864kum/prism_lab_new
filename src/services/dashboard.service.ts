@@ -5,7 +5,6 @@ import { countProjects } from '@/repositories/project.repository'
 import { countSponsors } from '@/repositories/sponsor.repository'
 import { countGalleryImages } from '@/repositories/gallery.repository'
 import { countNewsItems } from '@/repositories/news.repository'
-import { countHeroSlides } from '@/repositories/hero.repository'
 
 export async function getDashboardStatistics() {
   const [
@@ -16,7 +15,6 @@ export async function getDashboardStatistics() {
     phdScholars,
     mastersStudents,
     undergraduates,
-    interns,
     totalPublications,
     journalArticles,
     conferencePapers,
@@ -27,7 +25,6 @@ export async function getDashboardStatistics() {
     sponsors,
     galleryImages,
     newsItems,
-    heroSlides,
   ] = await Promise.all([
     countMembers(),
     countMembers({ status: 'current' }),
@@ -36,7 +33,6 @@ export async function getDashboardStatistics() {
     countMembers({ role: 'PhD Scholar' }),
     countMembers({ role: 'Masters Student' }),
     countMembers({ role: 'Undergraduate' }),
-    countMembers({ role: 'Intern' }),
     countPublications(),
     countPublications('journal'),
     countPublications('conference'),
@@ -47,7 +43,6 @@ export async function getDashboardStatistics() {
     countSponsors(),
     countGalleryImages(),
     countNewsItems(),
-    countHeroSlides(),
   ])
 
   return {
@@ -56,13 +51,13 @@ export async function getDashboardStatistics() {
       current: currentMembers,
       alumni: alumniMembers,
       completed: completedMembers,
-      byRole: { phdScholars, mastersStudents, undergraduates, interns },
+      byRole: { phdScholars, mastersStudents, undergraduates },
     },
     publications: { total: totalPublications, byType: { journalArticles, conferencePapers } },
     research: {
       areas: researchAreas,
       projects: { total: projects, ongoing: ongoingProjects, completed: completedProjects },
     },
-    content: { sponsors, galleryImages, newsItems, heroSlides },
+    content: { sponsors, galleryImages, newsItems },
   }
 }

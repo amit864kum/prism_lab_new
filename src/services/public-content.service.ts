@@ -18,7 +18,6 @@ import {
 import { countProjects, getProjectBySlug, listProjects } from '@/repositories/project.repository'
 import { getAboutSection } from '@/repositories/about.repository'
 import { listNewsItems } from '@/repositories/news.repository'
-import { getPIProfile } from '@/repositories/pi-profile.repository'
 import { listSponsors } from '@/repositories/sponsor.repository'
 import { listGalleryImages } from '@/repositories/gallery.repository'
 import { getFooter } from '@/repositories/footer.repository'
@@ -26,7 +25,6 @@ import { getFooter } from '@/repositories/footer.repository'
 export const getPublicGalleryImages = listGalleryImages
 export const getPublicProjects = listProjects
 export const getPublicProjectBySlug = getProjectBySlug
-export const getPublicPIProfile = getPIProfile
 export const getPublicMember = getMemberBySlugOrId
 export const getPublicResearchArea = getResearchAreaBySlug
 
@@ -47,6 +45,9 @@ export async function getPublicMemberProfile(
   const member = await getMemberBySlugOrId(value)
   if (!member) return { member: null, publications: [] }
 
+  // A member profile is the complete publication record for that author:
+  // include both global lab publications and profile-only publications.
+  // The global Publications page remains isolated through its profileOnly:false filter.
   const publications = await listPublications(
     { authorId: member._id.toString() },
     {
@@ -60,7 +61,7 @@ export async function getPublicMemberProfile(
 }
 
 export function getPublicationsPageData() {
-  return listPublications({}, { populate: true, authorSelect: 'name slug role' })
+  return listPublications({ profileOnly: false }, { populate: true, authorSelect: 'name slug role' })
 }
 
 export async function getResearchAreaPageData(slug: string) {
@@ -68,10 +69,12 @@ export async function getResearchAreaPageData(slug: string) {
   if (!area) return { area: null, publications: [] }
 
   const explicit = Array.isArray((area as any).publications)
-    ? (area as any).publications.filter((publication: any) => publication?.title)
+    ? (area as any).publications.filter(
+        (publication: any) => publication?.title && publication.profileOnly !== true
+      )
     : []
   const related = await listPublications(
-    { researchAreaId: area._id.toString() },
+    { researchAreaId: area._id.toString(), profileOnly: false },
     { populate: true, authorSelect: 'name slug role' }
   )
 
@@ -95,7 +98,6 @@ export async function getHomepageContent() {
     about,
     news,
     areas,
-    piProfile,
     projects,
     members,
     sponsors,
@@ -109,14 +111,13 @@ export async function getHomepageContent() {
     getAboutSection(),
     listNewsItems(6),
     listResearchAreas(6),
-    getPIProfile(),
     listProjects({ order: 1 }, 6),
     listMembers(
       { status: 'current', roleContains: 'ph' },
       { sort: { displayOrder: 1, yearJoined: -1, name: 1 }, limit: 4 }
     ),
     listSponsors(),
-    listGalleryImages(null, 6),
+    listGalleryImages(),
     countPublications(),
     countResearchAreas(),
     countCurrentPhdMembers(),
@@ -128,7 +129,6 @@ export async function getHomepageContent() {
     about,
     news,
     areas,
-    piProfile,
     projects,
     members,
     sponsors,

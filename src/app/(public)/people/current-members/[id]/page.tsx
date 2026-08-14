@@ -68,7 +68,7 @@ if (!member) {
           {/* Left Column Profile Card */}
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2 opacity-100 transition duration-300" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent dark:from-blue-500/2 opacity-100 transition duration-300" />
               
               <div className="h-56 w-56 rounded-2xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex items-center justify-center relative mb-6">
                 {member.imageUrl ? (
@@ -83,19 +83,19 @@ if (!member) {
                 )}
               </div>
 
-              <h2 className="font-extrabold text-slate-955 dark:text-white text-xl tracking-tight leading-snug">
+              <h2 className="font-extrabold text-slate-950 dark:text-white text-xl tracking-tight leading-snug">
                 {member.name}
               </h2>
-              <p className="text-xs font-semibold text-blue-600 dark:text-blue-450 tracking-wider uppercase mt-1">
+              <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 tracking-wider uppercase mt-1">
                 {member.role}
               </p>
 
               {/* Contact list */}
-              <div className="w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 text-xs text-slate-600 dark:text-slate-400 font-semibold">
+              <div className="relative z-10 w-full mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 text-xs text-slate-600 dark:text-slate-400 font-semibold">
                 {member.email && (
                   <a
                     href={`mailto:${member.email}`}
-                    className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition min-w-0"
+                    className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition min-w-0"
                   >
                     <Mail className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span className="break-all min-w-0">{member.email}</span>
@@ -106,10 +106,10 @@ if (!member) {
                     href={member.linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
+                    className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
                   >
                     <svg
-                      className="h-4.5 w-4.5 fill-current text-slate-450 dark:text-slate-400 flex-shrink-0"
+                      className="h-4.5 w-4.5 fill-current text-slate-400 dark:text-slate-400 flex-shrink-0"
                       viewBox="0 0 24 24"
                       xmlns="http://www.w3.org/2000/svg"
                     >
@@ -123,7 +123,7 @@ if (!member) {
                     href={member.googleScholarUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
+                    className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
                   >
                     <GraduationCap className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span>Google Scholar Profile</span>
@@ -134,7 +134,7 @@ if (!member) {
                     href={member.personalPortfolioWebsite}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
+                    className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition"
                   >
                     <Globe className="h-4.5 w-4.5 text-slate-400 flex-shrink-0" />
                     <span>Visit Website</span>
@@ -145,7 +145,7 @@ if (!member) {
                     href={member.resumePdf}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition mt-2"
+                    className="relative z-20 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition mt-2"
                   >
                     <FileText className="h-4 w-4" />
                     Download Resume
@@ -157,6 +157,27 @@ if (!member) {
 
           {/* Right Column Profile Biography & Publications */}
           <div className="lg:col-span-8 space-y-8">
+            {(member.status === 'alumni' || member.status === 'completed') && (
+              <section className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-slate-900">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                    Thesis Title
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                    {member.thesisTitle || 'Not provided'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/50 dark:bg-slate-900">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-400">
+                    Current Position
+                  </p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-slate-700 dark:text-slate-300">
+                    {member.currentPosition || 'Not provided'}
+                  </p>
+                </div>
+              </section>
+            )}
+
             {/* Biography */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-2">
@@ -165,11 +186,11 @@ if (!member) {
               </h3>
               {member.bio ? (
                 <div
-                  className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-450 leading-relaxed text-sm sm:text-base space-y-4"
+                  className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base space-y-4"
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(member.bio) }}
                 />
               ) : (
-                <p className="text-slate-455 dark:text-slate-500 italic text-sm">
+                <p className="text-slate-500 dark:text-slate-400 italic text-sm">
                   Biography not updated yet.
                 </p>
               )}
@@ -177,7 +198,7 @@ if (!member) {
 
             {/* Linked Publications */}
             <div className="space-y-6">
-              <h3 className="text-lg font-extrabold text-slate-955 dark:text-white flex items-center gap-2 px-1">
+              <h3 className="text-lg font-extrabold text-slate-950 dark:text-white flex items-center gap-2 px-1">
                 <BookOpen className="h-5 w-5 text-blue-500" />
                 Publications & Works ({publications.length})
               </h3>
@@ -250,20 +271,42 @@ if (!member) {
                         </p>
                       </div>
 
-                      {pub.venue && (
-                        <p className="text-xs italic text-slate-500 dark:text-slate-450">
-                          {pub.venue}
+                      {(pub.journalName || pub.venue) && (
+                        <p className="text-xs italic text-slate-500 dark:text-slate-400">
+                          {pub.journalName || pub.venue}
                         </p>
                       )}
 
-                      {(pub.pdfUrl || pub.externalUrl) && (
-                        <div className="flex gap-4 pt-1">
+                      {(pub.doiLink || pub.datasetLink || pub.pdfUrl || pub.externalUrl) && (
+                        <div className="flex flex-wrap gap-4 pt-1">
+                          {pub.doiLink && (
+                            <a
+                              href={pub.doiLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              DOI
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
+                          {pub.datasetLink && (
+                            <a
+                              href={pub.datasetLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              Dataset
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
                           {pub.pdfUrl && (
                             <a
                               href={pub.pdfUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-705 dark:text-blue-400 dark:hover:text-blue-300"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                             >
                               <FileText className="h-4 w-4" />
                               PDF
@@ -274,7 +317,7 @@ if (!member) {
                               href={pub.externalUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-705 dark:text-blue-400 dark:hover:text-blue-300"
+                              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                             >
                               <ExternalLink className="h-4 w-4" />
                               Publisher Site

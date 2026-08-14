@@ -31,15 +31,23 @@ function normalizePublication<T extends Record<string, any>>(publication: T) {
 }
 
 export async function getPublications(
-  filters: { type?: PublicationType; year?: number } = {},
+  filters: { type?: PublicationType; year?: number; profileOnly?: boolean } = {},
   pagination: { limit?: number; skip?: number } = {}
 ) {
-  const publications = await listPublications(filters, { populate: true, ...pagination })
+  const publications = await listPublications(
+    { ...filters, profileOnly: filters.profileOnly ?? false },
+    { populate: true, ...pagination }
+  )
   return publications.map(normalizePublication)
 }
 
 export async function getPublication(id: string) {
   const publication = await getPublicationById(id, true)
+  return publication ? normalizePublication(publication as any) : null
+}
+
+export async function getScopedPublication(id: string, profileOnly: boolean) {
+  const publication = await getPublicationById(id, true, profileOnly)
   return publication ? normalizePublication(publication as any) : null
 }
 
@@ -49,8 +57,8 @@ export async function addPublication(input: PublicationInput) {
   }
 
   const data = { ...input, type: normalizePublicationType(input.type) }
-  data.displayOrder = data.displayOrder || (await getNextPublicationDisplayOrder(data.type))
-  await shiftPublicationDisplayOrder(data.type, data.displayOrder)
+  data.displayOrder = data.displayOrder || (await getNextPublicationDisplayOrder(data.type, undefined, data.profileOnly))
+  await shiftPublicationDisplayOrder(data.type, data.displayOrder, undefined, data.profileOnly)
 
   const upload = await prepareUploadForPersistence(data.pdfUrl, 'publications')
   data.pdfUrl = upload.url
@@ -73,6 +81,14 @@ export async function addPublication(input: PublicationInput) {
   }
 }
 
+export function addScopedPublication(input: PublicationInput, profileOnly: boolean) {
+  return addPublication({
+    ...input,
+    profileOnly,
+    researchAreas: profileOnly ? [] : input.researchAreas,
+  })
+}
+
 export async function editPublication(id: string, input: PublicationInput) {
   const current = await getPublicationById(id)
   if (!current) {
@@ -83,10 +99,10 @@ export async function editPublication(id: string, input: PublicationInput) {
   }
 
   const data = { ...input, type: normalizePublicationType(input.type) }
-  data.displayOrder = data.displayOrder || (await getNextPublicationDisplayOrder(data.type, id))
+  data.displayOrder = data.displayOrder || (await getNextPublicationDisplayOrder(data.type, id, data.profileOnly))
 
   if (current.type !== data.type || current.displayOrder !== data.displayOrder) {
-    await shiftPublicationDisplayOrder(data.type, data.displayOrder, id)
+    await shiftPublicationDisplayOrder(data.type, data.displayOrder, id, data.profileOnly)
   }
   const upload = await prepareUploadForPersistence(data.pdfUrl, 'publications')
   data.pdfUrl = upload.url
@@ -121,6 +137,22 @@ export async function editPublication(id: string, input: PublicationInput) {
   }
 }
 
+export async function editScopedPublication(
+  id: string,
+  input: PublicationInput,
+  profileOnly: boolean
+) {
+  const current = await getPublicationById(id, false, profileOnly)
+  if (!current) {
+    return { conflict: false as const, notFound: true as const, publication: null }
+  }
+  return editPublication(id, {
+    ...input,
+    profileOnly,
+    researchAreas: profileOnly ? [] : input.researchAreas,
+  })
+}
+
 export async function removePublication(id: string) {
   const publication = await getPublicationById(id)
   if (!publication) return null
@@ -135,4 +167,10 @@ export async function removePublication(id: string) {
   await deletePublication(id)
   await removeStoredFile(publication.pdfUrl)
   return publication
+}
+
+export async function removeScopedPublication(id: string, profileOnly: boolean) {
+  const publication = await getPublicationById(id, false, profileOnly)
+  if (!publication) return null
+  return removePublication(id)
 }

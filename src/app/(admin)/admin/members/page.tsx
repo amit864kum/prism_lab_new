@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
 import SafeImage from '@/components/ui/SafeImage'
 import RichTextEditor from '@/components/admin/LazyRichTextEditor'
-import { Users, Plus, Trash2, Edit2, Search, Mail, BookOpen, Globe, FileText } from 'lucide-react'
+import { Users, Plus, Trash2, Edit2, Search, Mail, BookOpen, Globe, FileText, X } from 'lucide-react'
 import { MEMBER_ROLES, MEMBER_ROLE_LABELS, type MemberRole, type MemberStatus } from '@/lib/member-options'
+import { isVisibleAdminMember } from '@/lib/admin-member-visibility'
+import { getPublicationTypeLabel, PUBLICATION_TYPES, type PublicationType } from '@/lib/publication-types'
 import { Github } from 'lucide-react'
 
 const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
@@ -36,6 +38,8 @@ interface Member {
   yearLeft?: number
   imageUrl?: string
   bio?: string
+  thesisTitle?: string
+  currentPosition?: string
   email?: string
   linkedinUrl?: string
   googleScholarUrl?: string
@@ -43,6 +47,10 @@ interface Member {
   resumePdf?: string
   displayOrder?: number
 }
+
+const ADMIN_MEMBER_ROLES = MEMBER_ROLES.filter(
+  (memberRole): memberRole is Exclude<MemberRole, 'Intern'> => memberRole !== 'Intern'
+)
 
 export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([])
@@ -62,6 +70,8 @@ export default function MembersPage() {
   const [yearLeft, setYearLeft] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [bio, setBio] = useState('')
+  const [thesisTitle, setThesisTitle] = useState('')
+  const [currentPosition, setCurrentPosition] = useState('')
   const [email, setEmail] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [googleScholarUrl, setGoogleScholarUrl] = useState('')
@@ -70,6 +80,19 @@ export default function MembersPage() {
   const [resumePdf, setResumePdf] = useState('')
   const [displayOrder, setDisplayOrder] = useState('')
 
+  // Profile-only publication form states
+  const [publicationMember, setPublicationMember] = useState<Member | null>(null)
+  const [publicationSubmitting, setPublicationSubmitting] = useState(false)
+  const [publicationTitle, setPublicationTitle] = useState('')
+  const [publicationType, setPublicationType] = useState<PublicationType>('journal')
+  const [publicationYear, setPublicationYear] = useState(String(new Date().getFullYear()))
+  const [publicationVenue, setPublicationVenue] = useState('')
+  const [publicationLink, setPublicationLink] = useState('')
+  const [publicationPdfUrl, setPublicationPdfUrl] = useState('')
+  const [publicationDescription, setPublicationDescription] = useState('')
+  const [publicationExternalAuthors, setPublicationExternalAuthors] = useState('')
+  const [publicationCoAuthors, setPublicationCoAuthors] = useState<string[]>([])
+
   const [manualSlug, setManualSlug] = useState(false)
 
   const fetchMembers = async () => {
@@ -77,7 +100,9 @@ export default function MembersPage() {
       const res = await fetch('/api/members')
       const data = await res.json()
       if (res.ok) {
-        setMembers(data.members || [])
+        setMembers(
+          (data.members || []).filter(isVisibleAdminMember)
+        )
       } else {
         showFeedback(data.error || 'Failed to fetch members list', 'error')
       }
@@ -120,6 +145,123 @@ export default function MembersPage() {
     setManualSlug(true)
   }
 
+  const resetPublicationForm = (close = false) => {
+    setPublicationTitle('')
+    setPublicationType('journal')
+    setPublicationYear(String(new Date().getFullYear()))
+    setPublicationVenue('')
+    setPublicationLink('')
+    setPublicationPdfUrl('')
+    setPublicationDescription('')
+    setPublicationExternalAuthors('')
+    setPublicationCoAuthors([])
+    if (close) setPublicationMember(null)
+  }
+
+  const openPublicationForm = (member: Member) => {
+    resetPublicationForm()
+    setPublicationMember(member)
+    window.requestAnimationFrame(() => {
+      document.getElementById('member-publication-form')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
+  const togglePublicationCoAuthor = (memberId: string) => {
+    setPublicationCoAuthors((current) =>
+      current.includes(memberId)
+        ? current.filter((id) => id !== memberId)
+        : [...current, memberId]
+    )
+  }
+
+  const handlePublicationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!publicationMember) return
+
+    const trimmedTitle = publicationTitle.trim()
+    if (!trimmedTitle) {
+      showFeedback('Publication title is required', 'error')
+      return
+    }
+
+    const year = Number(publicationYear)
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+      showFeedback('Enter a valid publication year between 2000 and 2100', 'error')
+      return
+    }
+
+    if (
+      (publicationType === 'journal' || publicationType === 'conference') &&
+      !publicationVenue.trim()
+    ) {
+      showFeedback(
+        publicationType === 'journal' ? 'Journal name is required' : 'Conference name is required',
+        'error'
+      )
+      return
+    }
+
+    const uniqueSuffix = Date.now().toString(36)
+    const authors = Array.from(new Set([publicationMember._id, ...publicationCoAuthors]))
+    const referenceLink = publicationLink.trim()
+    const payload = {
+      title: trimmedTitle,
+      slug: `${slugify(trimmedTitle) || 'publication'}-${uniqueSuffix}`,
+      type: publicationType,
+      authors,
+      externalAuthors: publicationExternalAuthors
+        .split(',')
+        .map((author) => author.trim())
+        .filter(Boolean),
+      researchAreas: [],
+      year,
+      venue:
+        publicationType === 'journal' ? undefined : publicationVenue.trim() || undefined,
+      journalName: publicationType === 'journal' ? publicationVenue.trim() : undefined,
+      doiLink:
+        !['dataset', 'invited-talk'].includes(publicationType) && referenceLink
+          ? referenceLink
+          : undefined,
+      datasetLink: publicationType === 'dataset' && referenceLink ? referenceLink : undefined,
+      externalUrl:
+        publicationType === 'invited-talk' && referenceLink ? referenceLink : undefined,
+      description: publicationDescription.trim() || undefined,
+      pdfUrl: publicationPdfUrl || undefined,
+      tags: [],
+      profileOnly: true,
+    }
+
+    setPublicationSubmitting(true)
+    try {
+      const res = await fetch('/api/member-publications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        const validationMessage = data.details?.[0]?.message
+        showFeedback(validationMessage || data.error || 'Failed to add publication', 'error')
+        return
+      }
+
+      showFeedback(
+        `Publication added to ${authors.length} selected member profile${authors.length === 1 ? '' : 's'}.`,
+        'success'
+      )
+      resetPublicationForm(true)
+      fetchMembers()
+    } catch {
+      showFeedback('An error occurred while adding the publication', 'error')
+    } finally {
+      setPublicationSubmitting(false)
+    }
+  }
+
   const resetForm = () => {
     setEditId(null)
     setName('')
@@ -130,6 +272,8 @@ export default function MembersPage() {
     setYearLeft('')
     setImageUrl('')
     setBio('')
+    setThesisTitle('')
+    setCurrentPosition('')
     setEmail('')
     setLinkedinUrl('')
     setGoogleScholarUrl('')
@@ -150,6 +294,8 @@ export default function MembersPage() {
     setYearLeft(m.yearLeft ? String(m.yearLeft) : '')
     setImageUrl(m.imageUrl || '')
     setBio(m.bio || '')
+    setThesisTitle(m.thesisTitle || '')
+    setCurrentPosition(m.currentPosition || '')
     setEmail(m.email || '')
     setLinkedinUrl(m.linkedinUrl || '')
     setGoogleScholarUrl(m.googleScholarUrl || '')
@@ -200,6 +346,8 @@ export default function MembersPage() {
       yearLeft: yearLeft ? Number(yearLeft) : undefined,
       imageUrl: imageUrl || undefined,
       bio: bio || undefined,
+      thesisTitle: thesisTitle || undefined,
+      currentPosition: currentPosition || undefined,
       email: email || undefined,
       linkedinUrl: linkedinUrl || undefined,
       googleScholarUrl: googleScholarUrl || undefined,
@@ -246,7 +394,7 @@ export default function MembersPage() {
     return matchesSearch && matchesRole
   })
 
-  const groupedMembers = MEMBER_ROLES.reduce((acc, currentRole) => {
+  const groupedMembers = ADMIN_MEMBER_ROLES.reduce((acc, currentRole) => {
     const roleMembers = filteredMembers
       .filter((member) => member.role === currentRole)
       .sort((a, b) => (a.displayOrder || 9999) - (b.displayOrder || 9999))
@@ -306,7 +454,7 @@ export default function MembersPage() {
                 value={name}
                 onChange={handleNameChange}
                 className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm font-medium"
-                placeholder="e.g. Amit Kumar"
+                placeholder="e.g. Shubham Kumar"
               />
             </div>
 
@@ -337,7 +485,7 @@ export default function MembersPage() {
                   onChange={(e) => setRole(e.target.value as any)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                 >
-                  {MEMBER_ROLES.map((memberRole) => (
+                  {ADMIN_MEMBER_ROLES.map((memberRole) => (
                     <option key={memberRole} value={memberRole}>
                       {MEMBER_ROLE_LABELS[memberRole]}
                     </option>
@@ -418,6 +566,41 @@ export default function MembersPage() {
                 subfolder="members"
               />
             </div>
+
+            {status !== 'current' && (
+              <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">Alumni Details</h3>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    These details are shown on the public Alumni cards.
+                  </p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Thesis Title
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={thesisTitle}
+                    onChange={(event) => setThesisTitle(event.target.value)}
+                    className="w-full resize-y rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="Enter the thesis title"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    Current Position
+                  </label>
+                  <input
+                    type="text"
+                    value={currentPosition}
+                    onChange={(event) => setCurrentPosition(event.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    placeholder="e.g. Research Engineer, Organization"
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <FileUpload
@@ -514,6 +697,196 @@ export default function MembersPage() {
 
         {/* Directory Listing */}
         <div className="xl:col-span-2 space-y-4">
+          {publicationMember && (
+            <div
+              id="member-publication-form"
+              className="scroll-mt-24 rounded-xl border border-blue-200 bg-blue-50/50 p-6 shadow-sm"
+            >
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                    <BookOpen className="h-5 w-5 text-blue-600" />
+                    Add Profile Publication
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    This publication will appear on <strong>{publicationMember.name}</strong>&apos;s
+                    profile and any additional member profiles selected below. It will not appear in
+                    the global Publications page.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => resetPublicationForm(true)}
+                  className="rounded-lg border border-gray-300 bg-white p-2 text-gray-500 transition hover:bg-gray-50 hover:text-gray-900"
+                  aria-label="Close publication form"
+                  title="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handlePublicationSubmit} className="space-y-5">
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Publication Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={publicationTitle}
+                    onChange={(e) => setPublicationTitle(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter the publication title"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Publication Type
+                    </label>
+                    <select
+                      value={publicationType}
+                      onChange={(e) => setPublicationType(e.target.value as PublicationType)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {PUBLICATION_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {getPublicationTypeLabel(type)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      Publication Year
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={2000}
+                      max={2100}
+                      value={publicationYear}
+                      onChange={(e) => setPublicationYear(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      {publicationType === 'journal'
+                        ? 'Journal Name'
+                        : publicationType === 'conference'
+                          ? 'Conference Name'
+                          : 'Venue / Publisher (Optional)'}
+                    </label>
+                    <input
+                      type="text"
+                      required={publicationType === 'journal' || publicationType === 'conference'}
+                      value={publicationVenue}
+                      onChange={(e) => setPublicationVenue(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter journal, conference, or venue"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-semibold text-gray-700">
+                      DOI / Reference Link (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      value={publicationLink}
+                      onChange={(e) => setPublicationLink(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://doi.org/..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    External Authors (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={publicationExternalAuthors}
+                    onChange={(e) => setPublicationExternalAuthors(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Separate names with commas"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-semibold text-gray-700">
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={publicationDescription}
+                    onChange={(e) => setPublicationDescription(e.target.value)}
+                    className="w-full resize-y rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Short publication description"
+                  />
+                </div>
+
+                <FileUpload
+                  label="Publication PDF (Optional)"
+                  value={publicationPdfUrl}
+                  onChange={setPublicationPdfUrl}
+                  type="pdf"
+                  subfolder="publications"
+                />
+
+                <fieldset>
+                  <legend className="mb-2 text-sm font-semibold text-gray-700">
+                    Also show on other member profiles (Optional)
+                  </legend>
+                  <div className="max-h-52 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-3">
+                    {members
+                      .filter((member) => member._id !== publicationMember._id)
+                      .map((member) => (
+                        <label
+                          key={member._id}
+                          className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={publicationCoAuthors.includes(member._id)}
+                            onChange={() => togglePublicationCoAuthor(member._id)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="font-medium">{member.name}</span>
+                          <span className="ml-auto text-xs text-gray-400">
+                            {MEMBER_ROLE_LABELS[member.role]}
+                          </span>
+                        </label>
+                      ))}
+                  </div>
+                </fieldset>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="submit"
+                    disabled={publicationSubmitting}
+                    className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+                  >
+                    {publicationSubmitting ? 'Adding Publication...' : 'Add to Selected Profiles'}
+                  </button>
+                  <a
+                    href={`/people/current-members/${publicationMember.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-center text-sm font-semibold text-blue-700 hover:underline"
+                  >
+                    View {publicationMember.name}&apos;s profile
+                  </a>
+                </div>
+              </form>
+            </div>
+          )}
+
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm p-6 space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h2 className="text-lg font-bold text-gray-900">Lab Directory</h2>
@@ -534,7 +907,7 @@ export default function MembersPage() {
                   className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm bg-white"
                 >
                   <option value="All">All Roles</option>
-                  {MEMBER_ROLES.map((memberRole) => (
+                  {ADMIN_MEMBER_ROLES.map((memberRole) => (
                     <option key={memberRole} value={memberRole}>
                       {MEMBER_ROLE_LABELS[memberRole]}
                     </option>
@@ -648,6 +1021,14 @@ export default function MembersPage() {
                           </div>
 
                           <div className="flex gap-2 flex-shrink-0 self-end sm:self-center">
+                            <button
+                              onClick={() => openPublicationForm(member)}
+                              className="p-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition"
+                              title="Add profile publication"
+                              aria-label={`Add publication to ${member.name}'s profile`}
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </button>
                             <button
                               onClick={() => handleEdit(member)}
                               className="p-2 border border-gray-300 hover:bg-gray-50 text-gray-600 rounded-lg hover:text-blue-600 transition"

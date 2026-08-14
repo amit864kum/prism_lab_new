@@ -11,6 +11,8 @@ import {
 import Link from 'next/link'
 import SafeImage from '@/components/ui/SafeImage'
 
+const PRISM_EMBLEM = '/images/prism-emblem.png'
+
 interface FooterData {
   copyrightText: string
   developerName: string
@@ -97,19 +99,15 @@ if (!data) return null
           <div>
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-sm">
 
-              {data.prismLogoUrl ? (
-                <div className="flex justify-start">
+              <div className="flex justify-center">
+                <span className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-white/15 bg-white p-2 shadow-[0_0_35px_rgba(56,189,248,0.14)]">
                   <SafeImage
-                    src={data.prismLogoUrl}
-                    alt="PRISM Lab Logo"
-                    className="h-[120px] w-auto max-w-full object-contain"
+                    src={PRISM_EMBLEM}
+                    alt="PRISM Lab emblem"
+                    className="h-full w-full rounded-full object-contain"
                   />
-                </div>
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-600 text-4xl font-black text-white">
-                  P
-                </div>
-              )}
+                </span>
+              </div>
 
               <h3 className="mt-5 text-2xl font-black text-white">
                 Pervasive & Intelligent Systems Lab

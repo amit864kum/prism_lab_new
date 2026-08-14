@@ -32,7 +32,7 @@ export default async function ProjectsPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20">
+    <div className="project-page min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-20">
       <div className="relative bg-slate-900 text-white overflow-hidden py-16 sm:py-20 border-b border-slate-800">
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl" />

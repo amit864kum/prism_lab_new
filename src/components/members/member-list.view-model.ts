@@ -9,6 +9,8 @@ interface MemberListSource {
   yearJoined?: number | null
   imageUrl?: string
   bio?: string
+  thesisTitle?: string
+  currentPosition?: string
   email?: string
   linkedinUrl?: string
   googleScholarUrl?: string
@@ -27,6 +29,8 @@ export interface MemberListViewModel {
   yearJoined: number | null
   imageUrl: string
   bio: string
+  thesisTitle: string
+  currentPosition: string
   email: string
   linkedinUrl: string
   googleScholarUrl: string
@@ -46,6 +50,8 @@ export function toMemberListViewModel(member: MemberListSource): MemberListViewM
     yearJoined: member.yearJoined || null,
     imageUrl: member.imageUrl || '',
     bio: member.bio || '',
+    thesisTitle: member.thesisTitle || '',
+    currentPosition: member.currentPosition || '',
     email: member.email || '',
     linkedinUrl: member.linkedinUrl || '',
     googleScholarUrl: member.googleScholarUrl || '',

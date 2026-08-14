@@ -1,18 +1,84 @@
 
+import type { SVGProps } from 'react'
 import {
   Boxes,
-  BrainCircuit,
-  Cpu,
   RadioTower,
-  Share2,
   TrendingUp
 } from 'lucide-react'
 
+function MobileEdgeComputingIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M8 8h8M12 4a6.5 6.5 0 0 1 0 8M12 4a6.5 6.5 0 0 0 0 8" />
+      <path d="m9 11-3 4M15 11l3 4M12 12v3" />
+      <rect x="3" y="15" width="5" height="6" rx="1" />
+      <rect x="9.5" y="15" width="5" height="6" rx="1" />
+      <rect x="16" y="15" width="5" height="6" rx="1" />
+    </svg>
+  )
+}
+
+function AiEducationIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="m7 7 5-3 5 3-5 3-5-3Z" />
+      <path d="M17 7v4M9 9v2.5c1.8 1.3 4.2 1.3 6 0V9" />
+      <circle cx="5" cy="17" r="1.5" />
+      <circle cx="12" cy="19" r="1.5" />
+      <circle cx="19" cy="17" r="1.5" />
+      <path d="m6.4 16.5 4.2-2.2M13.4 14.3l4.2 2.2M12 14v3.5" />
+      <circle cx="12" cy="14" r="1" />
+    </svg>
+  )
+}
+
+function GameTheoryIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="5" r="2" />
+      <path d="M8.8 10c.6-1.8 1.7-2.7 3.2-2.7s2.6.9 3.2 2.7" />
+      <circle cx="5" cy="17" r="2" />
+      <path d="M2 22c.5-1.8 1.5-2.7 3-2.7S7.5 20.2 8 22" />
+      <circle cx="19" cy="17" r="2" />
+      <path d="M16 22c.5-1.8 1.5-2.7 3-2.7s2.5.9 3 2.7" />
+      <path d="m9.5 9-3 5M14.5 9l3 5M8 17h8" />
+    </svg>
+  )
+}
+
 const researchNodes = [
-  // IoT → text above logo
+  // Mobile Edge Computing → text above logo
   {
-    label: 'Internet of Things',
-    icon: RadioTower,
+    label: 'Mobile Edge Computing',
+    icon: MobileEdgeComputingIcon,
     className:
       'left-1/2 top-[1%] -translate-x-1/2 flex-col-reverse items-center text-center',
   },
@@ -25,18 +91,18 @@ const researchNodes = [
       'right-[-15%] top-[28%] flex-row items-center gap-3 text-left',
   },
 
-  // Mechanism Design → text below
+  // AI for Education → text below
   {
-    label: 'Mechanism Design',
-    icon: Cpu,
+    label: 'AI for Education',
+    icon: AiEducationIcon,
     className:
       'right-[7%] bottom-[18%] flex-col items-center text-center',
   },
 
   // Game Theory → logo in orbit, text below
   {
-    label: 'Game-Theoretic Applications',
-    icon: Share2,
+    label: 'Game Theory',
+    icon: GameTheoryIcon,
     className:
       'left-1/2 bottom-[2%] -translate-x-1/2 flex-col items-center text-center',
   },
@@ -49,12 +115,12 @@ const researchNodes = [
       'left-[10%] bottom-[22%] flex-col items-center text-center',
   },
 
-  // Machine Learning → text left
+  // 5G and Beyond → text left
   {
-    label: 'Machine Learning',
-    icon: BrainCircuit,
+    label: '5G and Beyond',
+    icon: RadioTower,
     className:
-      'left-[-15%] top-[28%] flex-row-reverse items-center gap-3 text-right',
+      'left-[-5%] top-[28%] flex-row-reverse items-center gap-3 text-right',
   },
 ]
 

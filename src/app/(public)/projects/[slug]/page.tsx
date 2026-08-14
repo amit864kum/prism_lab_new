@@ -79,7 +79,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
       : ''
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 dark:bg-slate-950">
+    <div className="project-page min-h-screen bg-slate-50/50 pb-20 dark:bg-slate-950">
       <div className="relative overflow-hidden border-b border-slate-800 bg-slate-900 py-16 text-white sm:py-24">
         <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]" />
         <div className="absolute -right-40 -top-40 h-96 w-96 rounded-full bg-blue-500/15 blur-3xl" />

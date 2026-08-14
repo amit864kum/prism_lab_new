@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
-import { DEFAULT_THEME } from '@/config/theme'
+import { DEFAULT_THEME, THEME_STORAGE_KEY } from '@/config/theme'
 
 export const metadata: Metadata = {
   title: 'Prism Lab - IIT Patna',
@@ -21,6 +21,7 @@ export default function RootLayout({
           defaultTheme={DEFAULT_THEME}
           enableSystem
           disableTransitionOnChange
+          storageKey={THEME_STORAGE_KEY}
         >
           {children}
         </ThemeProvider>

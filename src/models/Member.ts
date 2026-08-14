@@ -5,6 +5,17 @@ import type { IMember } from '@/types/member'
 
 export type { IMember } from '@/types/member'
 
+const alumniProfileFields = {
+  thesisTitle: {
+    type: String,
+    trim: true,
+  },
+  currentPosition: {
+    type: String,
+    trim: true,
+  },
+}
+
 const memberSchema = new Schema<IMember>(
   {
     name: {
@@ -48,6 +59,7 @@ const memberSchema = new Schema<IMember>(
       type: String,
       trim: true,
     },
+    ...alumniProfileFields,
     email: {
       type: String,
       lowercase: true,
@@ -93,7 +105,20 @@ const memberSchema = new Schema<IMember>(
 memberSchema.index({ status: 1, role: 1, displayOrder: 1, yearJoined: -1 })
 // Note: slug index is auto-created by unique:true in field definition
 
-const Member: Model<IMember> =
-  mongoose.models.Member || mongoose.model<IMember>('Member', memberSchema)
+const existingMember = mongoose.models.Member as Model<IMember> | undefined
+
+// Next.js keeps compiled Mongoose models between development reloads. Add newly
+// introduced paths to that retained model so admin updates do not silently drop
+// alumni fields until the development server is restarted.
+if (existingMember) {
+  if (!existingMember.schema.path('thesisTitle')) {
+    existingMember.schema.add({ thesisTitle: alumniProfileFields.thesisTitle })
+  }
+  if (!existingMember.schema.path('currentPosition')) {
+    existingMember.schema.add({ currentPosition: alumniProfileFields.currentPosition })
+  }
+}
+
+const Member: Model<IMember> = existingMember || mongoose.model<IMember>('Member', memberSchema)
 
 export default Member

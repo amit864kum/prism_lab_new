@@ -22,6 +22,7 @@ import {
   PUBLICATION_TYPES,
   type PublicationType,
 } from '@/lib/publication-types'
+import { isSelectableAdminPublicationMember } from '@/lib/admin-member-visibility'
 
 interface Member {
   _id: string
@@ -146,7 +147,7 @@ export default function PublicationsPage() {
       }
 
       if (memRes.ok) {
-        setMembers(memData.members || [])
+        setMembers((memData.members || []).filter(isSelectableAdminPublicationMember))
       }
 
       if (areaRes.ok) {
@@ -375,7 +376,7 @@ export default function PublicationsPage() {
             Publications
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage global lab publications separately from PI profile publications.
+            Manage lab-wide publications shown on the public Publications page.
           </p>
         </div>
         {editId && (
@@ -613,7 +614,12 @@ export default function PublicationsPage() {
           )}
 
           <div>
-            <span className="mb-2 block text-sm font-semibold text-gray-700">Select Authors</span>
+            <div className="mb-2">
+              <span className="block text-sm font-semibold text-gray-700">Select Authors</span>
+              <p className="mt-1 text-xs font-medium text-gray-500">
+                This publication will also appear on every selected author&apos;s profile.
+              </p>
+            </div>
             <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border border-gray-300 bg-gray-50/60 p-3">
               {members.length === 0 ? (
                 <p className="text-xs font-medium italic text-gray-500">No members available.</p>
@@ -831,7 +837,7 @@ export default function PublicationsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {activePublications.map((publication, index) => (
-                      <tr key={publication._id} className="align-top hover:bg-gray-50/70">
+                      <tr key={publication._id} className="publication-admin-row align-top transition-colors">
                         <td className="px-3 py-4 font-bold text-gray-700">{index + 1}</td>
                         <td className="px-3 py-4 text-xs font-semibold text-gray-600">
                           {[
@@ -911,7 +917,7 @@ function PublicationCard({
   onMove: (publication: Publication, direction: 'up' | 'down') => void
 }) {
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <article className="publication-hover-card rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-blue-600">

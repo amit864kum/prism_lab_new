@@ -5,11 +5,10 @@ import {
   Code2,
   Compass,
   FileText,
-  Image,
   Images,
   Newspaper,
+  ScrollText,
   ShieldCheck,
-  User,
   Users,
 } from 'lucide-react'
 
@@ -52,16 +51,16 @@ const DASHBOARD_ITEMS = [
     icon: Images,
   },
   {
-    title: 'PI Profile',
-    description: 'Edit principal investigator profile and academic sections.',
-    href: '/admin/pi-profile',
-    icon: User,
-  },
-  {
     title: 'Members',
-    description: 'Manage research scholars, students, alumni, and interns.',
+    description: 'Manage research scholars, students, and alumni.',
     href: '/admin/members',
     icon: Users,
+  },
+  {
+    title: 'Member Publications',
+    description: 'Add publications that appear only on selected member profiles.',
+    href: '/admin/member-publications',
+    icon: ScrollText,
   },
   {
     title: 'Publications',

@@ -38,6 +38,222 @@ body {
   max-width: 100vw;
 }
 
+/* ─── Justified textual content across every page/section ───── */
+:where(main, footer) :where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  li,
+  blockquote,
+  dt,
+  dd,
+  figcaption,
+  article,
+  .prose,
+  .prose *
+) {
+  text-align: justify !important;
+  text-justify: inter-word;
+  hyphens: auto;
+}
+
+/* Route-specific heading alignment */
+.landing-page :where(h1, h2, h3, h4, h5, h6) {
+  text-align: center !important;
+}
+
+.landing-page .landing-heading-left {
+  text-align: left !important;
+}
+
+.featured-projects-heading,
+.featured-projects-intro {
+  text-align: center !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.featured-project-card-title,
+.featured-project-card-copy,
+.featured-project-card-copy :where(p, li, h1, h2, h3, h4, h5, h6) {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.landing-page #news-events :where(h1, h2, h3, h4, h5, h6, p, li, blockquote, article) {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.project-page :where(h1, h2, h3, h4, h5, h6) {
+  text-align: left !important;
+}
+
+.member-page-section-title {
+  text-align: center !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.member-card-name {
+  width: 100%;
+  text-align: center !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.member-alumni-name {
+  width: 100%;
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.publication-section-heading,
+.publication-table-title,
+.publication-card-heading,
+.publication-table-copy,
+.publication-result-copy {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
+.publication-public-row {
+  background-color: transparent;
+  box-shadow: inset 3px 0 transparent;
+}
+
+.publication-public-row:hover,
+.publication-public-row:focus-within {
+  background-color: rgb(239 246 255 / 0.72);
+  box-shadow: inset 3px 0 rgb(37 99 235);
+}
+
+.dark .publication-public-row:hover,
+.dark .publication-public-row:focus-within {
+  background-color: rgb(30 58 138 / 0.16);
+  box-shadow: inset 3px 0 rgb(96 165 250);
+}
+
+.admin-login-page main :where(h1, h2, h3, h4, h5, h6) {
+  text-align: center !important;
+}
+
+@media (min-width: 1024px) {
+  .admin-login-page main :where(h1, h2, h3, h4, h5, h6) {
+    text-align: left !important;
+  }
+}
+
+/* ─── Admin dark-mode compatibility ────────────────────────── */
+.dark .admin-shell {
+  color-scheme: dark;
+}
+
+.dark .admin-shell :where(.bg-white, .bg-white\/95) {
+  background-color: rgb(15 23 42) !important;
+}
+
+.dark .admin-shell :where(.bg-gray-50, .bg-gray-50\/60) {
+  background-color: rgb(2 6 23) !important;
+}
+
+.dark .admin-shell :where(.bg-gray-100, .bg-slate-100) {
+  background-color: rgb(30 41 59) !important;
+}
+
+.dark .admin-shell :where(.border-gray-100, .border-gray-200, .border-gray-300, .border-slate-200) {
+  border-color: rgb(51 65 85) !important;
+}
+
+.dark .admin-shell :where(.text-gray-950, .text-gray-900, .text-gray-800, .text-slate-950) {
+  color: rgb(248 250 252) !important;
+}
+
+.dark .admin-shell :where(.text-gray-700, .text-gray-600, .text-slate-700, .text-slate-600) {
+  color: rgb(203 213 225) !important;
+}
+
+.dark .admin-shell :where(.text-gray-500, .text-gray-400, .text-slate-500) {
+  color: rgb(148 163 184) !important;
+}
+
+.dark .admin-shell :where(input, select, textarea) {
+  border-color: rgb(71 85 105) !important;
+  background-color: rgb(2 6 23) !important;
+  color: rgb(241 245 249) !important;
+}
+
+.dark .admin-shell :where(input, textarea)::placeholder {
+  color: rgb(100 116 139) !important;
+}
+
+.dark .admin-shell :where(input, select, textarea):disabled {
+  background-color: rgb(30 41 59) !important;
+  color: rgb(148 163 184) !important;
+}
+
+.dark .admin-shell :where(.hover\:bg-gray-50:hover, .hover\:bg-gray-100:hover) {
+  background-color: rgb(30 41 59) !important;
+}
+
+.dark .admin-shell .admin-brand-mark {
+  background-color: white !important;
+}
+
+/* Shared publication interaction — restrained in public and admin UIs */
+.publication-hover-card {
+  transform: translateY(0);
+  transition:
+    transform 240ms ease,
+    border-color 240ms ease,
+    background-color 240ms ease,
+    box-shadow 240ms ease;
+}
+
+.publication-hover-card:hover,
+.publication-hover-card:focus-within {
+  transform: translateY(-4px);
+  border-color: rgb(147 197 253);
+  box-shadow: 0 20px 48px rgba(37, 99, 235, 0.12);
+}
+
+.dark .publication-hover-card:hover,
+.dark .publication-hover-card:focus-within {
+  border-color: rgb(29 78 216);
+  background-color: rgb(17 28 49) !important;
+  box-shadow: 0 22px 55px rgba(2, 6, 23, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.12);
+}
+
+.publication-admin-row {
+  transition: background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.publication-admin-row:hover,
+.publication-admin-row:focus-within {
+  background-color: rgb(239 246 255);
+  box-shadow: inset 3px 0 0 rgb(37 99 235);
+}
+
+.dark .publication-admin-row:hover,
+.dark .publication-admin-row:focus-within {
+  background-color: rgb(20 34 57) !important;
+  box-shadow: inset 3px 0 0 rgb(59 130 246);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .publication-hover-card {
+    transform: none !important;
+  }
+}
+
 /* ─── Prevent any element from causing horizontal overflow ──── */
 * {
   box-sizing: border-box;
