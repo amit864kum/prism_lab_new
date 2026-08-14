@@ -75,18 +75,42 @@ jobs:
           target="$EC2_USER@$EC2_HOST"
           archive_path="$(mktemp)"
           remote_archive="/tmp/prism-lab-$RELEASE_SHA.tar"
+          control_path="$RUNNER_TEMP/prism-ssh-%C"
           ssh_options=(
             -o BatchMode=yes
             -o ConnectTimeout=30
             -o ConnectionAttempts=3
+            -o ControlMaster=auto
+            -o ControlPersist=60
+            -o ControlPath="$control_path"
             -o ServerAliveInterval=15
             -o ServerAliveCountMax=20
             -o TCPKeepAlive=yes
           )
           trap 'rm -f "$archive_path"' EXIT
 
+          retry_command() {
+            local maximum_attempts="$1"
+            shift
+            local attempt=1
+            local delay=15
+
+            until "$@"; do
+              if (( attempt >= maximum_attempts )); then
+                echo "Command failed after $attempt attempts." >&2
+                return 1
+              fi
+
+              echo "SSH endpoint is not ready (attempt $attempt/$maximum_attempts). Retrying in ${delay}s..." >&2
+              sleep "$delay"
+              attempt=$((attempt + 1))
+              delay=$((delay < 60 ? delay * 2 : 60))
+            done
+          }
+
           git archive --format=tar "$RELEASE_SHA" > "$archive_path"
-          scp "${ssh_options[@]}" "$archive_path" "$target:$remote_archive"
+          retry_command 6 ssh "${ssh_options[@]}" "$target" true
+          retry_command 4 scp "${ssh_options[@]}" "$archive_path" "$target:$remote_archive"
           ssh "${ssh_options[@]}" "$target" "bash -s -- '$RELEASE_SHA' '$remote_archive'" <<'REMOTE'
           set -Eeuo pipefail
 
