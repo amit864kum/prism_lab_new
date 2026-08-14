@@ -275,6 +275,17 @@ body {
   animation-play-state: paused;
 }
 
+.sponsors-marquee:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+    transform: none;
+  }
+}
+
 @keyframes news-scroll-y {
   0%   { transform: translateY(var(--news-scroll-offset)); }
   100% { transform: translateY(calc(var(--news-scroll-offset) - 50%)); }

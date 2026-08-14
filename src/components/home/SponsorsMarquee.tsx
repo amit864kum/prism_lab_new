@@ -26,9 +26,13 @@ const CorporateFallback = () => (
   </div>
 )
 
-function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
+function SponsorCard({ sponsor, marquee = false }: { sponsor: Sponsor; marquee?: boolean }) {
   return (
-    <article className="group relative flex min-h-52 select-none flex-col items-center justify-center px-6 py-7 text-center">
+    <article
+      className={`group relative flex min-h-52 select-none flex-col items-center justify-center px-6 py-7 text-center ${
+        marquee ? 'w-64 shrink-0' : 'w-full'
+      }`}
+    >
       <div className="pointer-events-none absolute inset-4 scale-95 rounded-[2rem] bg-blue-500/[0.04] opacity-0 blur-sm transition duration-300 group-hover:scale-100 group-hover:opacity-100 dark:bg-blue-400/[0.06]" />
       <div className="relative flex h-28 w-full max-w-52 items-center justify-center p-3 transition duration-300 group-hover:-translate-y-1">
         <SafeImage
@@ -53,6 +57,38 @@ export default function SponsorsMarquee({
   sponsors: Sponsor[]
 }) {
   if (sponsors.length === 0) return null
+
+  if (sponsors.length > 3) {
+    return (
+      <div className="sponsors-marquee relative w-full overflow-hidden py-1">
+        <div className="flex w-max">
+          <div className="animate-marquee flex shrink-0 items-stretch gap-6 pr-6">
+            {sponsors.map((sponsor) => (
+              <SponsorCard
+                key={`primary-${sponsor.name}-${sponsor.logoUrl}`}
+                sponsor={sponsor}
+                marquee
+              />
+            ))}
+          </div>
+          <div
+            className="animate-marquee flex shrink-0 items-stretch gap-6 pr-6"
+            aria-hidden="true"
+          >
+            {sponsors.map((sponsor) => (
+              <SponsorCard
+                key={`duplicate-${sponsor.name}-${sponsor.logoUrl}`}
+                sponsor={sponsor}
+                marquee
+              />
+            ))}
+          </div>
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-slate-50/95 to-transparent dark:from-slate-900/95 sm:w-24" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-slate-50/95 to-transparent dark:from-slate-900/95 sm:w-24" />
+      </div>
+    )
+  }
 
   return (
     <div className="px-5 sm:px-8 lg:px-12">
