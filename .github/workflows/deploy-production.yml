@@ -75,11 +75,19 @@ jobs:
           target="$EC2_USER@$EC2_HOST"
           archive_path="$(mktemp)"
           remote_archive="/tmp/prism-lab-$RELEASE_SHA.tar"
+          ssh_options=(
+            -o BatchMode=yes
+            -o ConnectTimeout=30
+            -o ConnectionAttempts=3
+            -o ServerAliveInterval=15
+            -o ServerAliveCountMax=20
+            -o TCPKeepAlive=yes
+          )
           trap 'rm -f "$archive_path"' EXIT
 
           git archive --format=tar "$RELEASE_SHA" > "$archive_path"
-          scp -o BatchMode=yes "$archive_path" "$target:$remote_archive"
-          ssh -o BatchMode=yes "$target" "bash -s -- '$RELEASE_SHA' '$remote_archive'" <<'REMOTE'
+          scp "${ssh_options[@]}" "$archive_path" "$target:$remote_archive"
+          ssh "${ssh_options[@]}" "$target" "bash -s -- '$RELEASE_SHA' '$remote_archive'" <<'REMOTE'
           set -Eeuo pipefail
 
           release_sha="$1"
