@@ -8,6 +8,14 @@ import { Users, Plus, Trash2, Edit2, Search, Mail, BookOpen, Globe, FileText, X 
 import { MEMBER_ROLES, MEMBER_ROLE_LABELS, type MemberRole, type MemberStatus } from '@/lib/member-options'
 import { isVisibleAdminMember } from '@/lib/admin-member-visibility'
 import { getPublicationTypeLabel, PUBLICATION_TYPES, type PublicationType } from '@/lib/publication-types'
+import {
+  ADMIN_MEMBER_GROUPS,
+  getAdminMemberGroupKey,
+  getAdminMemberStatusLabel,
+  getAdminMemberStatusOptions,
+  normalizeStatusForRole,
+  type AdminMemberGroupKey,
+} from '@/lib/admin-member-groups'
 import { Github } from 'lucide-react'
 
 const Linkedin = (props: React.SVGProps<SVGSVGElement>) => (
@@ -48,6 +56,46 @@ interface Member {
   displayOrder?: number
 }
 
+interface ApiValidationIssue {
+  path?: Array<string | number>
+  message?: string
+}
+
+const MEMBER_FIELD_LABELS: Record<string, string> = {
+  name: 'Full Name',
+  slug: 'SEO URL Slug',
+  role: 'Lab Role',
+  status: 'Status',
+  yearJoined: 'Year Joined',
+  yearLeft: 'Year Left',
+  thesisTitle: 'Thesis Title',
+  currentPosition: 'Current Position',
+  email: 'Email Address',
+  linkedinUrl: 'LinkedIn Link',
+  googleScholarUrl: 'Google Scholar Link',
+  githubUrl: 'GitHub Link',
+  personalPortfolioWebsite: 'Personal Portfolio Website',
+  displayOrder: 'Display Order',
+}
+
+function getMemberSaveError(data: {
+  error?: string
+  details?: ApiValidationIssue[]
+}) {
+  if (!Array.isArray(data.details) || data.details.length === 0) {
+    return data.error || 'Failed to save member'
+  }
+
+  return data.details
+    .slice(0, 3)
+    .map((issue) => {
+      const field = String(issue.path?.[0] || '')
+      const label = MEMBER_FIELD_LABELS[field]
+      return label ? `${label}: ${issue.message || 'Invalid value'}` : issue.message || 'Invalid value'
+    })
+    .join(' • ')
+}
+
 const ADMIN_MEMBER_ROLES = MEMBER_ROLES.filter(
   (memberRole): memberRole is Exclude<MemberRole, 'Intern'> => memberRole !== 'Intern'
 )
@@ -58,7 +106,7 @@ export default function MembersPage() {
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState({ text: '', type: '' })
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterRole, setFilterRole] = useState('All')
+  const [filterGroup, setFilterGroup] = useState<'All' | AdminMemberGroupKey>('All')
 
   // Form states
   const [editId, setEditId] = useState<string | null>(null)
@@ -289,7 +337,7 @@ export default function MembersPage() {
     setName(m.name)
     setSlug(m.slug)
     setRole(m.role)
-    setStatus(m.status)
+    setStatus(normalizeStatusForRole(m.role, m.status))
     setYearJoined(m.yearJoined ? String(m.yearJoined) : '')
     setYearLeft(m.yearLeft ? String(m.yearLeft) : '')
     setImageUrl(m.imageUrl || '')
@@ -377,7 +425,7 @@ export default function MembersPage() {
         resetForm()
         fetchMembers()
       } else {
-        showFeedback(data.error || 'Failed to save member', 'error')
+        showFeedback(getMemberSaveError(data), 'error')
       }
     } catch (err) {
       showFeedback('An error occurred while saving', 'error')
@@ -390,17 +438,17 @@ export default function MembersPage() {
     const matchesSearch =
       m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       m.role.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = filterRole === 'All' || m.role === filterRole
-    return matchesSearch && matchesRole
+    const matchesGroup =
+      filterGroup === 'All' || getAdminMemberGroupKey(m) === filterGroup
+    return matchesSearch && matchesGroup
   })
 
-  const groupedMembers = ADMIN_MEMBER_ROLES.reduce((acc, currentRole) => {
-    const roleMembers = filteredMembers
-      .filter((member) => member.role === currentRole)
-      .sort((a, b) => (a.displayOrder || 9999) - (b.displayOrder || 9999))
-    if (roleMembers.length > 0) acc[currentRole] = roleMembers
-    return acc
-  }, {} as Record<MemberRole, Member[]>)
+  const groupedMembers = ADMIN_MEMBER_GROUPS.map((group) => ({
+    ...group,
+    members: filteredMembers
+      .filter((member) => getAdminMemberGroupKey(member) === group.key)
+      .sort((a, b) => (a.displayOrder || 9999) - (b.displayOrder || 9999)),
+  })).filter((group) => group.members.length > 0)
 
   return (
     <div className="space-y-6">
@@ -482,7 +530,13 @@ export default function MembersPage() {
                 </label>
                 <select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as any)}
+                  onChange={(e) => {
+                    const nextRole = e.target.value as MemberRole
+                    setRole(nextRole)
+                    setStatus((currentStatus) =>
+                      normalizeStatusForRole(nextRole, currentStatus)
+                    )
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                 >
                   {ADMIN_MEMBER_ROLES.map((memberRole) => (
@@ -505,9 +559,11 @@ export default function MembersPage() {
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
                 >
-                  <option value="current">Current Member</option>
-                  <option value="alumni">Alumni</option>
-                  <option value="completed">Completed</option>
+                  {getAdminMemberStatusOptions(role).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -676,7 +732,8 @@ export default function MembersPage() {
                   Personal Portfolio Website
                 </label>
                 <input
-                  type="url"
+                  type="text"
+                  inputMode="url"
                   value={personalPortfolioWebsite}
                   onChange={(e) => setPersonalPortfolioWebsite(e.target.value)}
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none text-xs"
@@ -902,14 +959,16 @@ export default function MembersPage() {
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 </div>
                 <select
-                  value={filterRole}
-                  onChange={(e) => setFilterRole(e.target.value)}
+                  value={filterGroup}
+                  onChange={(e) =>
+                    setFilterGroup(e.target.value as 'All' | AdminMemberGroupKey)
+                  }
                   className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm bg-white"
                 >
-                  <option value="All">All Roles</option>
-                  {ADMIN_MEMBER_ROLES.map((memberRole) => (
-                    <option key={memberRole} value={memberRole}>
-                      {MEMBER_ROLE_LABELS[memberRole]}
+                  <option value="All">All Categories</option>
+                  {ADMIN_MEMBER_GROUPS.map((group) => (
+                    <option key={group.key} value={group.key}>
+                      {group.label}
                     </option>
                   ))}
                 </select>
@@ -924,15 +983,16 @@ export default function MembersPage() {
               </div>
             ) : (
               <div className="space-y-8">
-                {Object.entries(groupedMembers).map(([groupRole, roleMembers]) => (
-                  <div key={groupRole} className="space-y-3">
+                {groupedMembers.map((group) => (
+                  <div key={group.key} className="space-y-3">
                     <div className="flex items-center justify-between border-b border-gray-200 pb-2">
-                      <h3 className="text-sm font-extrabold text-gray-900">
-                        {MEMBER_ROLE_LABELS[groupRole as MemberRole]} ({roleMembers.length})
+                      <h3 className="flex items-center gap-2 text-sm font-extrabold text-gray-900">
+                        <span className="h-2 w-2 rounded-full bg-blue-600" />
+                        {group.label} ({group.members.length})
                       </h3>
                     </div>
                     <div className="divide-y divide-gray-200">
-                      {roleMembers.map((member) => (
+                      {group.members.map((member) => (
                         <div key={member._id} className="py-4 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
                           <div className="h-16 w-16 relative rounded-full overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0 flex items-center justify-center">
                             {member.imageUrl ? (
@@ -954,7 +1014,7 @@ export default function MembersPage() {
                                   : 'bg-gray-150 text-gray-800'
                                   }`}
                               >
-                                {member.status}
+                                {getAdminMemberStatusLabel(member)}
                               </span>
                             </div>
                             <p className="text-xs font-semibold text-blue-600">

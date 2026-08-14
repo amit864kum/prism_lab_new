@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
@@ -17,12 +17,13 @@ const NAV_LINKS = [
   { label: 'Publications', href: '/publications' },
   { label: 'Members', href: '/members' },
   { label: 'News', href: '/#news-events' },
-  { label: 'Contact', href: '/#contact' },
+  { label: 'Gallery', href: '/#gallery' },
+  { label: 'Contact', href: '#contact' },
 ]
 
 function isActivePath(pathname: string, href: string) {
   if (href === '/') return pathname === '/'
-  if (href.startsWith('/#')) return false
+  if (href.startsWith('#') || href.startsWith('/#')) return false
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -37,6 +38,25 @@ export default function SiteNavbar() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const handleNavClick = (
+    event: MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    setMobileOpen(false)
+
+    const hash = href.startsWith('/#') ? href.slice(1) : href
+    if (!hash.startsWith('#')) return
+
+    if (href.startsWith('/#') && pathname !== '/') return
+
+    const target = document.querySelector(hash)
+    if (!target) return
+
+    event.preventDefault()
+    window.history.pushState(null, '', hash)
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <header
@@ -70,6 +90,7 @@ export default function SiteNavbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(event) => handleNavClick(event, item.href)}
                 className={`group relative whitespace-nowrap py-2 text-[14px] font-bold transition-colors 2xl:text-[15px] ${active ? 'text-blue-700 dark:text-blue-400' : 'text-slate-900 hover:text-blue-700 dark:text-slate-100 dark:hover:text-blue-400'
                   }`}
               >
@@ -124,7 +145,7 @@ export default function SiteNavbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={(event) => handleNavClick(event, item.href)}
                 className={`rounded-xl px-4 py-3 text-sm font-bold transition ${active ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900'
                   }`}
               >

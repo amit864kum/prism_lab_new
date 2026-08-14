@@ -79,84 +79,85 @@ export default function Lightbox({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex flex-col justify-between bg-slate-950/95 text-white p-4 select-none backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Gallery image viewer"
+          className="fixed inset-0 z-[100] flex select-none flex-col bg-black/90 p-4 text-white backdrop-blur-sm sm:p-6"
         >
-          {/* Top Control Bar */}
-          <div className="flex items-center justify-between w-full h-14 px-2 md:px-6">
-            <p className="text-sm font-semibold truncate text-slate-400 max-w-md">
-              {currentIndex + 1} / {images.length} {currentImage.caption && `- ${currentImage.caption}`}
-            </p>
-
-            <div className="flex items-center gap-3">
-              {/* Zoom In/Out */}
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 sm:right-6 sm:top-6">
               <button
                 onClick={() => setZoomLevel((prev) => Math.max(1, prev - 0.5))}
-                className="p-2 border border-slate-800 rounded-lg hover:bg-slate-900 transition-colors text-slate-300"
+                aria-label="Zoom out"
+                className="rounded-md bg-white/10 p-2.5 text-white transition hover:bg-white/20"
                 title="Zoom Out"
               >
-                <ZoomOut className="h-4 w-4" />
+                <ZoomOut className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setZoomLevel((prev) => Math.min(3, prev + 0.5))}
-                className="p-2 border border-slate-800 rounded-lg hover:bg-slate-900 transition-colors text-slate-300"
+                aria-label="Zoom in"
+                className="rounded-md bg-white/10 p-2.5 text-white transition hover:bg-white/20"
                 title="Zoom In"
               >
-                <ZoomIn className="h-4 w-4" />
+                <ZoomIn className="h-5 w-5" />
               </button>
-              {/* Close */}
               <button
                 onClick={onClose}
-                className="p-2 border border-slate-800 rounded-lg hover:bg-slate-900 transition-colors text-slate-300"
+                aria-label="Close gallery viewer"
+                className="rounded-md p-2.5 text-white transition hover:bg-white/15"
                 title="Close (Esc)"
               >
-                <X className="h-4.5 w-4.5" />
+                <X className="h-7 w-7" />
               </button>
-            </div>
           </div>
 
-          {/* Center Carousel Area */}
-          <div className="flex-1 relative flex items-center justify-center min-h-0 w-full">
-            {/* Navigation Controls */}
+          <div className="relative flex min-h-0 flex-1 items-center justify-center pt-14 sm:pt-10">
             {images.length > 1 && (
               <>
                 <button
                   onClick={() => onNavigate((currentIndex - 1 + images.length) % images.length)}
-                  className="absolute left-2 md:left-6 z-10 p-3 bg-slate-900/60 hover:bg-slate-900 rounded-full border border-slate-800 text-white transition-all shadow-md focus:outline-none"
+                  aria-label="Previous lightbox image"
+                  className="absolute left-0 z-20 flex h-14 w-12 items-center justify-center bg-white/20 text-white transition hover:bg-white/30 sm:left-3 sm:h-16 sm:w-14"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
                 <button
                   onClick={() => onNavigate((currentIndex + 1) % images.length)}
-                  className="absolute right-2 md:right-6 z-10 p-3 bg-slate-900/60 hover:bg-slate-900 rounded-full border border-slate-800 text-white transition-all shadow-md focus:outline-none"
+                  aria-label="Next lightbox image"
+                  className="absolute right-0 z-20 flex h-14 w-12 items-center justify-center bg-white/20 text-white transition hover:bg-white/30 sm:right-3 sm:h-16 sm:w-14"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
               </>
             )}
 
-            {/* Active Image Wrapper */}
-            <div className="w-full h-full max-h-[80vh] flex items-center justify-center p-2 relative" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            <div
+              className="flex h-full max-h-[72vh] w-[calc(100%-5rem)] max-w-5xl items-center justify-center overflow-hidden rounded-xl bg-white p-4 shadow-2xl sm:w-[calc(100%-9rem)] sm:p-8"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               <motion.img
                 key={currentIndex}
                 initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: zoomLevel }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                style={{ transform: `scale(${zoomLevel})` }}
                 src={currentImage.imageUrl}
                 alt={currentImage.caption || `Lightbox Image ${currentIndex}`}
-                className="max-w-full max-h-full object-contain select-none transition-transform duration-200"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
           </div>
 
-          {/* Bottom Caption Bar */}
-          <div className="h-16 flex items-center justify-center text-center px-4 w-full">
+          <div className="flex min-h-20 flex-col items-center justify-center px-4 pt-4 text-center">
             {currentImage.caption && (
-              <p className="text-xs font-semibold text-slate-300 bg-slate-900/60 px-4 py-1.5 rounded-full border border-slate-800 max-w-xl truncate">
+              <p className="max-w-4xl text-base font-semibold leading-6 text-white sm:text-xl">
                 {currentImage.caption}
               </p>
             )}
+            <p className="mt-1 text-xs font-medium text-slate-400">
+              {currentIndex + 1} / {images.length}
+            </p>
           </div>
         </motion.div>
       )}

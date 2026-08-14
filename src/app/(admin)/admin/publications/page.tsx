@@ -23,13 +23,18 @@ import {
   type PublicationType,
 } from '@/lib/publication-types'
 import { isSelectableAdminPublicationMember } from '@/lib/admin-member-visibility'
+import { groupPublicationAuthors } from '@/lib/publication-author-groups'
+import { getAdminMemberStatusLabel } from '@/lib/admin-member-groups'
+import type { MemberRole } from '@/constants/roles'
+import type { MemberStatus } from '@/constants/memberStatus'
 
 interface Member {
   _id: string
   name: string
-  role: string
-  status: string
+  role: MemberRole
+  status: MemberStatus
   imageUrl?: string
+  displayOrder?: number
 }
 
 interface ResearchArea {
@@ -131,7 +136,7 @@ export default function PublicationsPage() {
     try {
       const [pubRes, memRes, areaRes] = await Promise.all([
         fetch('/api/publications'),
-        fetch('/api/members'),
+        fetch('/api/members?limit=500'),
         fetch('/api/research-areas'),
       ])
       const [pubData, memData, areaData] = await Promise.all([
@@ -178,6 +183,11 @@ export default function PublicationsPage() {
       })
       .sort((a, b) => (a.displayOrder || 9999) - (b.displayOrder || 9999) || b.year - a.year)
   }, [activeTab, publications, searchTerm])
+
+  const groupedAuthors = useMemo(
+    () => groupPublicationAuthors(members),
+    [members],
+  )
 
   const updateForm = (updates: Partial<typeof form>) => {
     setForm((prev) => ({ ...prev, ...updates }))
@@ -615,37 +625,67 @@ export default function PublicationsPage() {
 
           <div>
             <div className="mb-2">
-              <span className="block text-sm font-semibold text-gray-700">Select Authors</span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="block text-sm font-semibold text-gray-700">Select Authors</span>
+                <span className="text-[11px] font-bold text-blue-600">
+                  {members.length} eligible member{members.length === 1 ? '' : 's'}
+                </span>
+              </div>
               <p className="mt-1 text-xs font-medium text-gray-500">
                 This publication will also appear on every selected author&apos;s profile.
               </p>
             </div>
-            <div className="max-h-56 space-y-2 overflow-y-auto rounded-lg border border-gray-300 bg-gray-50/60 p-3">
+            <div className="max-h-[34rem] space-y-5 overflow-y-auto rounded-lg border border-gray-300 bg-gray-50/60 p-3">
               {members.length === 0 ? (
                 <p className="text-xs font-medium italic text-gray-500">No members available.</p>
               ) : (
-                members.map((member) => (
-                  <label key={member._id} className="flex cursor-pointer items-center gap-3 rounded-lg bg-white p-2 text-xs shadow-sm ring-1 ring-gray-100">
-                    <input
-                      type="checkbox"
-                      checked={form.selectedAuthors.includes(member._id)}
-                      onChange={() => toggleAuthor(member._id)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full bg-slate-100">
-                      {member.imageUrl ? (
-                        <SafeImage src={member.imageUrl} alt={member.name} className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center font-bold text-slate-500">
-                          {member.name.charAt(0)}
-                        </div>
-                      )}
+                groupedAuthors.map((group) => (
+                  <section key={group.key} className="space-y-2">
+                    <div className="sticky top-0 z-10 flex items-center justify-between border-b border-blue-100 bg-gray-50 py-1.5">
+                      <h3 className="text-xs font-extrabold uppercase tracking-[0.12em] text-blue-700">
+                        {group.label}
+                      </h3>
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                        {group.members.length}
+                      </span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-bold text-gray-900">{member.name}</p>
-                      <p className="truncate font-semibold text-gray-500">{member.role} · {member.status}</p>
+                    <div className="space-y-2">
+                      {group.members.map((member) => (
+                        <label
+                          key={member._id}
+                          className="flex cursor-pointer items-center gap-3 rounded-lg bg-white p-2.5 text-xs shadow-sm ring-1 ring-gray-100 transition hover:ring-blue-200"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.selectedAuthors.includes(member._id)}
+                            onChange={() => toggleAuthor(member._id)}
+                            className="h-4 w-4 flex-shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded-full bg-slate-100">
+                            {member.imageUrl ? (
+                              <SafeImage
+                                src={member.imageUrl}
+                                alt={member.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center font-bold text-slate-500">
+                                {member.name.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="break-words font-bold leading-snug text-gray-900">
+                              {member.name}
+                            </p>
+                            <p className="mt-0.5 break-words font-semibold leading-snug text-gray-500">
+                              {member.role} · {getAdminMemberStatusLabel(member)}
+                            </p>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                  </label>
+                  </section>
                 ))
               )}
             </div>

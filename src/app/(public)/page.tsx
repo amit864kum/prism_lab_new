@@ -308,14 +308,14 @@ export default async function HomePage() {
 
       {/* 8. Gallery Carousel Preview */}
       {galleryImages.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center space-y-3">
+        <section
+          id="gallery"
+          className="mx-auto max-w-7xl scroll-mt-28 space-y-8 px-4 sm:px-6 lg:px-8"
+        >
+          <div className="text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-              Lab Gallery & Activities
+              Gallery
             </h2>
-            <p className="max-w-xl mx-auto text-sm text-slate-500 dark:text-slate-450 font-medium">
-              Snapshots of group discussions, research showcases, workshops, and lab milestones.
-            </p>
           </div>
 
           <GalleryPreview
