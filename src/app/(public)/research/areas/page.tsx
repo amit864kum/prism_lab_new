@@ -86,12 +86,14 @@ export default function ResearchAreasPage() {
               className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between p-6 group"
             >
               <div className="space-y-4">
-                <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Compass className="h-6 w-6" />
+                <div className="research-domain-card-header flex flex-col items-start gap-4 md:flex-row md:items-center">
+                  <div className="h-12 w-12 shrink-0 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <Compass className="h-6 w-6" />
+                  </div>
+                  <h2 className="research-domain-card-title font-bold text-slate-900 dark:text-white text-lg tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {area.title}
+                  </h2>
                 </div>
-                <h2 className="font-bold text-slate-900 dark:text-white text-lg tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {area.title}
-                </h2>
                 <p className="text-slate-550 dark:text-slate-400 text-sm line-clamp-4 leading-relaxed">
                   {area.description}
                 </p>

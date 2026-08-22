@@ -126,6 +126,13 @@ body {
   text-align: left !important;
 }
 
+/* Research-card titles align with the icon below it on phones and beside it on desktop. */
+.research-domain-card-title {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+}
+
 .featured-projects-heading,
 .featured-projects-intro {
   text-align: center !important;

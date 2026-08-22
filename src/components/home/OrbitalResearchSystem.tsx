@@ -80,7 +80,7 @@ const researchNodes = [
     label: 'Mobile Edge Computing',
     icon: MobileEdgeComputingIcon,
     className:
-      'left-1/2 top-[1%] -translate-x-1/2 flex-col-reverse items-center text-center',
+      'left-1/2 top-0 -translate-x-1/2 flex-col-reverse items-center text-center sm:top-[1%]',
   },
 
   // Network Economics → text right
@@ -88,7 +88,7 @@ const researchNodes = [
     label: 'Network Economics',
     icon: TrendingUp,
     className:
-      'right-[-15%] top-[28%] flex-row items-center gap-3 text-left',
+      'right-[2%] top-[24%] flex-col items-center text-center sm:right-[-15%] sm:top-[28%] sm:flex-row sm:text-left',
   },
 
   // AI for Education → text below
@@ -96,7 +96,7 @@ const researchNodes = [
     label: 'AI for Education',
     icon: AiEducationIcon,
     className:
-      'right-[7%] bottom-[18%] flex-col items-center text-center',
+      'right-[2%] bottom-[17%] flex-col items-center text-center sm:right-[7%] sm:bottom-[18%]',
   },
 
   // Game Theory → logo in orbit, text below
@@ -104,7 +104,7 @@ const researchNodes = [
     label: 'Game Theory',
     icon: GameTheoryIcon,
     className:
-      'left-1/2 bottom-[2%] -translate-x-1/2 flex-col items-center text-center',
+      'left-1/2 bottom-0 -translate-x-1/2 flex-col items-center text-center sm:bottom-[2%]',
   },
 
   // Blockchain
@@ -112,7 +112,7 @@ const researchNodes = [
     label: 'Blockchain',
     icon: Boxes,
     className:
-      'left-[10%] bottom-[22%] flex-col items-center text-center',
+      'left-[2%] bottom-[17%] flex-col items-center text-center sm:left-[10%] sm:bottom-[22%]',
   },
 
   // 5G and Beyond → text left
@@ -120,14 +120,17 @@ const researchNodes = [
     label: '5G and Beyond',
     icon: RadioTower,
     className:
-      'left-[-5%] top-[28%] flex-row-reverse items-center gap-3 text-right',
+      'left-[2%] top-[24%] flex-col items-center text-center sm:left-[-5%] sm:top-[28%] sm:flex-row-reverse sm:text-right',
   },
 ]
 
 export default function OrbitalResearchSystem() {
   return (
-    <div className="w-full overflow-hidden py-4 flex justify-center items-center">
-      <div className="relative aspect-square w-[85%] sm:w-full max-w-[440px] lg:mr-4 xl:max-w-[490px] 2xl:max-w-[520px] scale-[0.85] sm:scale-100 origin-center">
+    <div
+      className="flex w-full items-center justify-center overflow-hidden py-4"
+      data-testid="hero-orbital-system"
+    >
+      <div className="relative aspect-square w-full max-w-[440px] lg:mr-4 xl:max-w-[490px] 2xl:max-w-[520px]">
 
       {/* Outer Orbit */}
       <div className="absolute inset-[15%] rounded-full border border-cyan-100/65 shadow-[0_0_42px_rgba(59,130,246,0.24)]" />
@@ -196,15 +199,15 @@ export default function OrbitalResearchSystem() {
 
         return (
           <div
-  key={node.label}
-  className={`absolute ${node.className} flex gap-2 sm:gap-3`}
-
+            key={node.label}
+            data-research-node={node.label}
+            className={`absolute ${node.className} flex gap-1.5 sm:gap-3`}
           >
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cyan-300/70 bg-slate-950/80 text-white shadow-[0_0_36px_rgba(59,130,246,0.30)] transition hover:-translate-y-1 hover:border-cyan-100 sm:h-16 sm:w-16">
-              <Icon className="h-6 w-6 sm:h-7 sm:w-7" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-cyan-300/70 bg-slate-950/80 text-white shadow-[0_0_36px_rgba(59,130,246,0.30)] transition hover:-translate-y-1 hover:border-cyan-100 sm:h-16 sm:w-16">
+              <Icon className="h-5 w-5 sm:h-7 sm:w-7" />
             </div>
 
-            <span className="max-w-[120px] text-[10px] font-semibold leading-snug text-white sm:text-[12px] xl:text-sm">
+            <span className="max-w-[100px] text-[9px] font-semibold leading-[1.2] text-white sm:max-w-[120px] sm:text-[12px] sm:leading-snug xl:text-sm">
               {node.label}
             </span>
           </div>
