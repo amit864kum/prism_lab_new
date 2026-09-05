@@ -3,18 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { z } from 'zod'
 import { getFooterSettings, updateFooterSettings } from '@/services/footer.service'
+import { optionalAssetUrl, optionalGoogleMapsEmbedUrl, httpsUrl } from '@/validators/url'
 
 export const dynamic = 'force-dynamic'
 
 const footerSchema = z.object({
   copyrightText: z.string().min(1, 'Copyright text is required').trim(),
   developerName: z.string().min(1, 'Developer name is required').trim(),
-  developerLink: z.string().url('Invalid developer link URL').trim(),
-  prismLogoUrl: z.string().optional().or(z.literal('')),
+  developerLink: httpsUrl('Invalid developer link URL'),
+  prismLogoUrl: optionalAssetUrl('Invalid logo URL'),
   address: z.string().optional().or(z.literal('')),
   contactNumber: z.string().optional().or(z.literal('')),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
-  googleMapsEmbedUrl: z.string().url('Invalid Google Maps embed URL').optional().or(z.literal('')),
+  googleMapsEmbedUrl: optionalGoogleMapsEmbedUrl(),
   heroPublicationsCount: z.coerce.number().int().min(0).nullable().optional().or(z.literal('')),
   heroResearchAreasCount: z.coerce.number().int().min(0).nullable().optional().or(z.literal('')),
   heroScholarsCount: z.coerce.number().int().min(0).nullable().optional().or(z.literal('')),

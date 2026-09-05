@@ -58,7 +58,7 @@ const TABLE_TYPES: PublicationType[] = ['journal', 'conference']
 const CARD_TYPES: PublicationType[] = ['book-chapter', 'patent']
 
 function authorHref(author: Member) {
-  return `/people/current-members/${author.slug || author._id}`
+  return `/members/${author.slug || author._id}`
 }
 
 function Authors({ publication }: { publication: Publication }) {

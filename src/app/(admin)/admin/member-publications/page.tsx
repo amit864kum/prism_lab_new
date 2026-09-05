@@ -535,7 +535,7 @@ export default function MemberPublicationsPage() {
                         {publication.authors.map((author) => (
                           <Link
                             key={author._id}
-                            href={`/people/current-members/${author.slug || author._id}`}
+                            href={`/members/${author.slug || author._id}`}
                             target="_blank"
                             className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"
                           >

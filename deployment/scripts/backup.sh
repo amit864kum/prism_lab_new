@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
 script_directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 default_app_root="$(cd -- "$script_directory/../.." && pwd -P)"
 app_root="${PRISM_APP_DIR:-$default_app_root}"
 backup_root="${BACKUP_ROOT:?BACKUP_ROOT must point to durable backup storage}"
 mongodb_uri="${MONGODB_URI:?MONGODB_URI is required}"
+signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:?BACKUP_SIGNING_PRIVATE_KEY is required}"
 uploads_root="${UPLOADS_ROOT:-$app_root/uploads}"
 
 command -v mongodump >/dev/null || { echo 'mongodump is required' >&2; exit 1; }
 command -v tar >/dev/null || { echo 'tar is required' >&2; exit 1; }
 command -v sha256sum >/dev/null || { echo 'sha256sum is required' >&2; exit 1; }
+command -v openssl >/dev/null || { echo 'openssl is required' >&2; exit 1; }
+[[ -f "$signing_private_key" ]] || { echo 'Backup signing private key is missing' >&2; exit 1; }
+private_key_mode="$(stat -c '%a' "$signing_private_key")"
+[[ "$private_key_mode" == '400' || "$private_key_mode" == '600' ]] \
+  || { echo 'Backup signing private key must have mode 400 or 600' >&2; exit 1; }
 
 mkdir -p -- "$backup_root"
+chmod 700 -- "$backup_root"
 backup_root="$(cd -- "$backup_root" && pwd -P)"
 app_root="$(cd -- "$app_root" && pwd -P)"
 uploads_root="$(cd -- "$uploads_root" && pwd -P)"
@@ -32,14 +40,20 @@ if [[ -e "$staging_directory" || -e "$final_directory" ]]; then
 fi
 
 mkdir -- "$staging_directory"
+chmod 700 -- "$staging_directory"
+mongo_config="$(mktemp)"
+chmod 600 -- "$mongo_config"
+escaped_mongodb_uri="${mongodb_uri//\'/\'\'}"
+printf "uri: '%s'\n" "$escaped_mongodb_uri" > "$mongo_config"
 cleanup() {
+  rm -f -- "$mongo_config"
   if [[ -d "$staging_directory" ]]; then
     rm -rf -- "$staging_directory"
   fi
 }
 trap cleanup EXIT
 
-mongodump --uri="$mongodb_uri" --archive="$staging_directory/mongodb.archive.gz" --gzip
+env -u MONGODB_URI mongodump --config="$mongo_config" --archive="$staging_directory/mongodb.archive.gz" --gzip
 
 if [[ ! -d "$uploads_root" ]]; then
   echo "Upload directory is missing: $uploads_root" >&2
@@ -62,7 +76,11 @@ tar -czf "$staging_directory/uploads.tar.gz" -C "$(dirname -- "$uploads_root")" 
   cd -- "$staging_directory"
   sha256sum mongodb.archive.gz uploads.tar.gz metadata.txt > SHA256SUMS
 )
+openssl dgst -sha256 -sign "$signing_private_key" \
+  -out "$staging_directory/SHA256SUMS.sig" "$staging_directory/SHA256SUMS"
+chmod 600 -- "$staging_directory"/*
 
 mv -- "$staging_directory" "$final_directory"
+rm -f -- "$mongo_config"
 trap - EXIT
 echo "Backup completed: $final_directory"

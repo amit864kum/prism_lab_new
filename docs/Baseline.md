@@ -14,7 +14,7 @@ Captured on 2026-08-05 before the architectural refactor. This file records obse
 
 ### Public pages
 
-`/`, `/gallery`, `/members`, `/members/[slug]`, `/people/alumni`, `/people/collaborators`, `/people/current-members`, `/people/current-members/[id]`, `/people/principal-investigator`, `/projects`, `/projects/[slug]`, `/publications`, `/research/areas`, `/research/areas/[slug]`, `/research/projects`, `/research/sponsors`, `/robots.txt`, and `/sitemap.xml`.
+`/`, `/gallery`, `/members`, `/members/[slug]`, `/people/alumni`, `/people/collaborators`, `/people/principal-investigator`, `/projects`, `/projects/[slug]`, `/publications`, `/research/areas`, `/research/areas/[slug]`, `/research/projects`, `/research/sponsors`, `/robots.txt`, and `/sitemap.xml`.
 
 ### Administrative pages
 
@@ -77,4 +77,3 @@ Captured on 2026-08-05 before the architectural refactor. This file records obse
 2. Do not change stored upload URLs before a database and filesystem backup exists.
 3. Every migration must support dry-run reporting, idempotent execution where feasible, and a documented reversal path.
 4. Retain the compatibility storage reader until staging and production validation demonstrate all legacy references are served correctly.
-

@@ -21,14 +21,25 @@ const adminSchema = new Schema<IAdmin>(
       required: true,
       trim: true,
     },
+    sessionVersion: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   }
 )
 
-// Prevent model recompilation in development
-const Admin: Model<IAdmin> =
-  mongoose.models.Admin || mongoose.model<IAdmin>('Admin', adminSchema)
+const existingAdmin = mongoose.models.Admin as Model<IAdmin> | undefined
+if (existingAdmin && !existingAdmin.schema.path('sessionVersion')) {
+  existingAdmin.schema.add({
+    sessionVersion: { type: Number, required: true, min: 0, default: 0 },
+  })
+}
+
+const Admin: Model<IAdmin> = existingAdmin || mongoose.model<IAdmin>('Admin', adminSchema)
 
 export default Admin

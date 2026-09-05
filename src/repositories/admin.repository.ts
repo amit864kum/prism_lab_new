@@ -10,3 +10,17 @@ export async function findSafeAdminById(id: string) {
   await connectDB()
   return Admin.findById(id).select('-passwordHash').lean()
 }
+
+export async function findAdminSessionIdentityById(id: string) {
+  await connectDB()
+  return Admin.findById(id).select('_id email sessionVersion').lean()
+}
+
+export async function incrementAdminSessionVersion(id: string) {
+  await connectDB()
+  return Admin.findByIdAndUpdate(
+    id,
+    { $inc: { sessionVersion: 1 } },
+    { returnDocument: 'after', runValidators: true }
+  ).select('_id sessionVersion').lean()
+}

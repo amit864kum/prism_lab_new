@@ -179,7 +179,7 @@ export default async function AlumniPage() {
                               )}
                             </div>
 
-                            <Link href={`/people/current-members/${member.slug || member._id.toString()}`} className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
+                            <Link href={`/members/${member.slug || member._id.toString()}`} className="inline-flex items-center gap-0.5 text-[11px] font-extrabold text-blue-600 dark:text-blue-400 hover:underline">
                               View Profile
                               <ExternalLink className="h-3 w-3" />
                             </Link>

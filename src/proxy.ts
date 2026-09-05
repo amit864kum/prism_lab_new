@@ -3,12 +3,13 @@ import { enforceAdminAuthentication } from '@/middleware/auth'
 import { requestCorrelation, attachRequestId, logMiddlewareResult } from '@/middleware/logger'
 import { enforceApiRateLimit } from '@/middleware/rate-limit'
 import { enforceSameOriginApiRequest } from '@/middleware/security'
-import { enforceUploadRequestLimit } from '@/middleware/upload'
+import { enforceApiRequestLimit, enforceUploadRequestLimit } from '@/middleware/upload'
 
 export async function proxy(request: NextRequest) {
   const { requestId, headers } = requestCorrelation(request)
   const response =
     enforceSameOriginApiRequest(request) ||
+    enforceApiRequestLimit(request) ||
     (request.nextUrl.pathname === '/api/upload' ? enforceUploadRequestLimit(request) : null) ||
     enforceApiRateLimit(request) ||
     (await enforceAdminAuthentication(request)) ||

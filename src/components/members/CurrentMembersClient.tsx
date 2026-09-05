@@ -45,7 +45,7 @@ function MemberImage({ member, className }: { member: Member; className: string 
 }
 
 function CurrentMemberCard({ member, index }: { member: Member; index: number }) {
-  const profileHref = `/people/current-members/${member.slug || member._id}`
+  const profileHref = `/members/${member.slug || member._id}`
 
   return (
     <motion.article
@@ -81,7 +81,7 @@ function CurrentMemberCard({ member, index }: { member: Member; index: number })
 }
 
 function AlumniCard({ member, index }: { member: Member; index: number }) {
-  const profileHref = `/people/current-members/${member.slug || member._id}`
+  const profileHref = `/members/${member.slug || member._id}`
 
   return (
     <motion.article

@@ -4,6 +4,8 @@
 
 The supported initial topology is Nginx → one PM2-managed Next.js process → MongoDB, with durable local `uploads/` and `logs/` directories. Multiple PM2 instances or hosts are unsupported until rate limiting and storage become shared services.
 
+The Next.js process must bind only to `127.0.0.1` (or `::1`) through `PRISM_BIND_ADDRESS`; host and cloud firewalls must deny external ingress to port 3000. Only Nginx ports 80/443 are public.
+
 ## Host prerequisites
 
 - A supported Node.js LTS release compatible with the locked framework version.

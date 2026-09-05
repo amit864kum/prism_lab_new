@@ -5,15 +5,15 @@ Runtime uploads are stored under the server-side `uploads/` directory and are se
 ## Upload lifecycle
 
 1. `POST /api/upload` requires an authenticated administrator.
-2. The server validates the requested category, size, MIME type, extension, and binary file signature.
+2. The server validates the requested category, size, MIME type, extension, and content structure. Images are decoded with pixel/dimension limits; PDFs are parsed and normalized into a clean document.
 3. A UUID-based file is written atomically to `uploads/temp/`.
 4. The relevant domain service promotes the staged file into its final category immediately before persistence.
 5. A failed database write removes the promoted file. Successful replacement or deletion removes the superseded managed file.
-6. Abandoned temporary files and unreferenced files are reported for operational review; they are never automatically deleted.
+6. Temporary files require admin authentication to read, expire after 24 hours, and share a 100 MB quota. The migration tool still reports unreferenced durable files for operational review.
 
 Supported final categories are `hero`, `members`, `principal-investigator`, `research`, `gallery`, `news`, `sponsors`, `publications`, `resumes`, `projects`, and `logos`.
 
-Image transformation is intentionally disabled until dimensions and visual output can be regression-tested. Uploaded images are currently stored byte-for-byte after validation.
+Uploaded images are orientation-normalized, resized to at most 4096×4096, re-encoded as JPEG/PNG/WebP, and stripped of metadata. Animated images are rejected. PDFs are served as downloads rather than inline active documents.
 
 ## Legacy migration
 

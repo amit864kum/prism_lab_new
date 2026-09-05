@@ -16,6 +16,7 @@
 /build
 /uploads/*
 !/uploads/.gitkeep
+/public/uploads/*
 /logs/*
 !/logs/.gitkeep
 

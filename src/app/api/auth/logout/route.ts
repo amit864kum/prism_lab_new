@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     const user = await getCurrentUser()
     const email = user ? user.email : 'Admin'
 
-    await endAdminSession(email)
+    await endAdminSession(user?.userId, email)
 
     return NextResponse.json({
       success: true,

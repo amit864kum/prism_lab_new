@@ -138,9 +138,9 @@ async function main() {
   })
   console.log('PASS singleton CMS create/update')
 
-  const firstHeroUpload = await upload('public/uploads/logos/1781176012722-0v9lgt.png', 'image', 'hero')
-  const secondHeroUpload = await upload('public/uploads/logos/1781176012722-0v9lgt.png', 'image', 'hero')
-  const publicationUpload = await upload('public/uploads/resumes/1780915972943-jkigia.pdf', 'pdf', 'publications')
+  const firstHeroUpload = await upload('public/images/prism-emblem.png', 'image', 'hero')
+  const secondHeroUpload = await upload('public/images/prism-emblem.png', 'image', 'hero')
+  const publicationUpload = await upload('tests/fixtures/safe-sample.pdf', 'pdf', 'publications')
   console.log('PASS image/PDF staging uploads')
 
   const heroPayload = {

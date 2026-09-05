@@ -240,11 +240,14 @@ Put the following values in `/etc/prism-lab.env`; use a URL-encoded MongoDB pass
 ```dotenv
 PRISM_APP_DIR=/srv/prism-lab/current
 PORT=3000
+PRISM_BIND_ADDRESS=127.0.0.1
 MONGODB_URI=mongodb://prism_app:URL_ENCODED_PASSWORD@127.0.0.1:27017/prism-lab?authSource=prism-lab
 JWT_SECRET=REPLACE_WITH_A_RANDOM_SECRET_OF_32_OR_MORE_CHARACTERS
 UPLOADS_ROOT=/srv/prism-lab/shared/uploads
 LOGS_ROOT=/srv/prism-lab/shared/logs
 BACKUP_ROOT=/srv/backups/prism-lab
+BACKUP_SIGNING_PRIVATE_KEY=/etc/prism-lab-backup-signing.pem
+BACKUP_SIGNING_PUBLIC_KEY=/etc/prism-lab-backup-signing.pub.pem
 NEXT_PUBLIC_API_URL=https://lab.example.org
 NEXT_PUBLIC_BASE_URL=https://lab.example.org
 ```
@@ -274,11 +277,8 @@ If this is the first release that uses durable uploads, back up the database and
 ```bash
 sudo -u prism -H bash -lc '
   set -a; source /etc/prism-lab.env; set +a
-  stamp=$(date -u +%Y%m%dT%H%M%SZ)
-  mkdir -p "$BACKUP_ROOT/pre-storage-migration-$stamp"
-  mongodump --uri="$MONGODB_URI" --archive="$BACKUP_ROOT/pre-storage-migration-$stamp/mongodb.archive.gz" --gzip
-  tar -czf "$BACKUP_ROOT/pre-storage-migration-$stamp/legacy-uploads.tar.gz" -C "$PRISM_APP_DIR/public" uploads
   cd "$PRISM_APP_DIR"
+  bash deployment/scripts/backup.sh
   npm run migrate:storage:dry-run
   npm run migrate:storage -- --apply
 '

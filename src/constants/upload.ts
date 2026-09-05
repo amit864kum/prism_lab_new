@@ -1,5 +1,10 @@
 export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024
-export const ALLOWED_IMAGE_MIME_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-export const ALLOWED_IMAGE_EXTENSIONS: readonly string[] = ['jpg', 'jpeg', 'png', 'webp', 'gif']
+export const MAX_IMAGE_UPLOAD_SIZE_BYTES = 2 * 1024 * 1024
+export const MAX_IMAGE_PIXELS = 25_000_000
+export const MAX_IMAGE_DIMENSION = 4096
+export const TEMP_UPLOAD_MAX_AGE_MS = 24 * 60 * 60 * 1000
+export const MAX_TEMP_UPLOAD_STORAGE_BYTES = 100 * 1024 * 1024
+export const ALLOWED_IMAGE_MIME_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
+export const ALLOWED_IMAGE_EXTENSIONS: readonly string[] = ['jpg', 'jpeg', 'png', 'webp']
 export const ALLOWED_PDF_MIME_TYPES: readonly string[] = ['application/pdf']
 export const ALLOWED_PDF_EXTENSIONS: readonly string[] = ['pdf']

@@ -39,19 +39,15 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
       issuer: TOKEN_ISSUER,
       audience: TOKEN_AUDIENCE,
     })
-    if (typeof payload.userId !== 'string' || typeof payload.email !== 'string') return null
+    if (
+      typeof payload.userId !== 'string' ||
+      typeof payload.email !== 'string' ||
+      typeof payload.sessionVersion !== 'number' ||
+      typeof payload.exp !== 'number'
+    ) return null
     return payload as JWTPayload
   } catch {
-    // Transitional support for still-valid tokens created before issuer and
-    // audience claims were introduced. Newly issued tokens always use both.
-    try {
-      const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ['HS256'] })
-      if (payload.iss !== undefined || payload.aud !== undefined) return null
-      if (typeof payload.userId !== 'string' || typeof payload.email !== 'string') return null
-      return payload as JWTPayload
-    } catch {
-      return null
-    }
+    return null
   }
 }
 
@@ -81,5 +77,14 @@ export async function getAuthToken(): Promise<string | null> {
 export async function getCurrentUser(): Promise<JWTPayload | null> {
   const token = await getAuthToken()
   if (!token) return null
-  return verifyToken(token)
+  const payload = await verifyToken(token)
+  if (!payload) return null
+
+  const { findAdminSessionIdentityById } = await import('@/repositories/admin.repository')
+  const admin = await findAdminSessionIdentityById(payload.userId)
+  const currentSessionVersion = admin?.sessionVersion ?? 0
+  if (!admin || admin.email !== payload.email || currentSessionVersion !== payload.sessionVersion) {
+    return null
+  }
+  return payload
 }

@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 function authorHref(author: any) {
-  return `/people/current-members/${author?.slug || author?._id?.toString()}`
+  return `/members/${author?.slug || author?._id?.toString()}`
 }
 
 function PublicationAuthors({ publication }: { publication: any }) {

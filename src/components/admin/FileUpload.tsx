@@ -129,7 +129,7 @@ export default function FileUpload({ value, onChange, type, subfolder, label }: 
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept={type === 'image' ? 'image/jpeg,image/png,image/webp,image/gif' : 'application/pdf'}
+            accept={type === 'image' ? 'image/jpeg,image/png,image/webp' : 'application/pdf'}
             className="hidden"
           />
           <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3 animate-pulse" />
@@ -138,7 +138,7 @@ export default function FileUpload({ value, onChange, type, subfolder, label }: 
           </p>
           <p className="text-xs text-gray-500 mt-1">
             {type === 'image'
-              ? 'Supports JPG, PNG, WEBP, GIF (Max 2MB)'
+              ? 'Supports JPG, PNG, WEBP (Max 2MB)'
               : 'Supports PDF format (Max 10MB)'}
           </p>
           {error && <p className="text-xs text-red-600 mt-2 font-medium">{error}</p>}

@@ -3,6 +3,7 @@ export interface IAdmin {
   email: string
   passwordHash: string
   name: string
+  sessionVersion: number
   createdAt: Date
   updatedAt: Date
 }
@@ -10,5 +11,6 @@ export interface IAdmin {
 export interface JWTPayload {
   userId: string
   email: string
+  sessionVersion: number
   [key: string]: unknown
 }

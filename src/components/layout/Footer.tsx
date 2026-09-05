@@ -135,6 +135,8 @@ export default function Footer() {
                   src={data.googleMapsEmbedUrl}
                   className="h-64 w-full sm:h-72"
                   loading="lazy"
+                  sandbox="allow-scripts allow-same-origin allow-popups"
+                  referrerPolicy="no-referrer"
                   title="PRISM Lab Location"
                 />
                 <a

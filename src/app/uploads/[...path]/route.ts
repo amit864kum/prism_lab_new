@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readStoredFile } from '@/services/storage.service'
+import { getCurrentUser } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,6 +14,11 @@ export async function GET(
     return NextResponse.json({ error: 'File not found' }, { status: 404 })
   }
 
+  const isTemporary = path[0] === 'temp'
+  if (isTemporary && !(await getCurrentUser())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const url = `/uploads/${path.join('/')}`
   const file = await readStoredFile(url)
   if (!file) return NextResponse.json({ error: 'File not found' }, { status: 404 })
@@ -24,13 +30,14 @@ export async function GET(
 
   return new NextResponse(new Uint8Array(file.buffer), {
     headers: {
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': isTemporary ? 'private, no-store' : 'public, max-age=31536000, immutable',
       'Content-Length': String(file.size),
       'Content-Type': file.contentType,
-      'Content-Disposition': 'inline',
+      'Content-Disposition': file.contentType === 'application/pdf' ? 'attachment' : 'inline',
       'Last-Modified': file.modifiedAt.toUTCString(),
       'X-Content-Type-Options': 'nosniff',
       'Content-Security-Policy': "default-src 'none'; sandbox",
+      'Cross-Origin-Resource-Policy': 'same-origin',
     },
   })
 }

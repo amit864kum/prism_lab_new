@@ -192,7 +192,7 @@ export default async function MemberProfilePage({ params }: PageProps) {
                               <span key={author._id.toString()}>
                                 {author.slug ? (
                                   <Link
-                                    href={`/people/current-members/${author.slug}`}
+                                    href={`/members/${author.slug}`}
                                     className="hover:text-blue-600 hover:underline"
                                   >
                                     {author.name}

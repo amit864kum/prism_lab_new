@@ -22,7 +22,7 @@ All routes are same-origin. JSON write routes validate input with Zod, require a
 
 ## List contracts
 
-The member, publication, gallery, project, news, sponsor, and research-area list routes accept optional positive `page` and `limit` query parameters. Defaults are page 1 and 250 items; the limit is capped at 500.
+The member, publication, gallery, project, news, sponsor, and research-area list routes accept optional positive `page` and `limit` query parameters. Defaults are page 1 and 100 items; the limit is capped at 250.
 
 Existing primary arrays remain unchanged (`members`, `publications`, `projects`, `news`, `sponsors`, `researchAreas`, and both gallery aliases). Responses also include:
 

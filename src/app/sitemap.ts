@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { url: `${baseUrl}/research/projects`, lastModified: new Date() },
       { url: `${baseUrl}/research/sponsors`, lastModified: new Date() },
       { url: `${baseUrl}/publications`, lastModified: new Date() },
-      { url: `${baseUrl}/people/current-members`, lastModified: new Date() },
+      { url: `${baseUrl}/members`, lastModified: new Date() },
       { url: `${baseUrl}/people/alumni`, lastModified: new Date() },
       { url: `${baseUrl}/people/collaborators`, lastModified: new Date() },
     ]
@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Add dynamic members
     members.forEach((m: any) => {
       sitemaps.push({
-        url: `${baseUrl}/people/current-members/${m.slug || m._id.toString()}`,
+        url: `${baseUrl}/members/${m.slug || m._id.toString()}`,
         lastModified: new Date(),
       })
     })

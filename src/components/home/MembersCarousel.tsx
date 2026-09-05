@@ -48,7 +48,7 @@ export default function MembersCarousel({ members }: { members: Member[] }) {
           </p>
 
           <Link
-            href={`/people/current-members/${member.slug}`}
+            href={`/members/${member.slug}`}
             className="mt-4 text-xs font-bold text-blue-600 dark:text-blue-400 group-hover:underline"
           >
             View Profile &rarr;

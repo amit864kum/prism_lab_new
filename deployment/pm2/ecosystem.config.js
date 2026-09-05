@@ -3,6 +3,7 @@ const path = require('path')
 const appDirectory = process.env.PRISM_APP_DIR || path.resolve(__dirname, '..', '..')
 const logsDirectory = process.env.LOGS_ROOT || path.join(appDirectory, 'logs')
 const port = process.env.PORT || '3000'
+const bindAddress = process.env.PRISM_BIND_ADDRESS || '127.0.0.1'
 
 module.exports = {
   apps: [
@@ -10,7 +11,7 @@ module.exports = {
       name: 'prism-lab',
       cwd: appDirectory,
       script: path.join(appDirectory, 'node_modules', 'next', 'dist', 'bin', 'next'),
-      args: `start -p ${port}`,
+      args: `start -p ${port} --hostname ${bindAddress}`,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -24,6 +25,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: port,
+        PRISM_BIND_ADDRESS: bindAddress,
       },
     },
   ],

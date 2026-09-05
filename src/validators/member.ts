@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { MEMBER_ROLES } from '@/constants/roles'
 import { MEMBER_STATUSES } from '@/constants/memberStatus'
+import { optionalAssetUrl, optionalHttpsUrl } from './url'
 
 function normalizeOptionalWebUrl(value: unknown) {
   if (typeof value !== 'string') return value
@@ -15,7 +16,7 @@ function normalizeOptionalWebUrl(value: unknown) {
 const optionalWebUrl = (message: string) =>
   z.preprocess(
     normalizeOptionalWebUrl,
-    z.string().url(message).optional().or(z.literal('')),
+    optionalHttpsUrl(message),
   )
 
 export const memberSchema = z.object({
@@ -29,7 +30,7 @@ export const memberSchema = z.object({
   status: z.enum(MEMBER_STATUSES).default('current'),
   yearJoined: z.number().int().min(2000).max(2100).optional(),
   yearLeft: z.number().int().min(2000).max(2100).optional(),
-  imageUrl: z.string().optional().or(z.literal('')),
+  imageUrl: optionalAssetUrl('Invalid member image URL'),
   bio: z.string().optional(),
   thesisTitle: z.string().trim().max(500, 'Thesis title is too long').optional(),
   currentPosition: z.string().trim().max(300, 'Current position is too long').optional(),
@@ -38,9 +39,9 @@ export const memberSchema = z.object({
   googleScholarUrl: optionalWebUrl('Invalid Google Scholar URL'),
   githubUrl: optionalWebUrl('Invalid GitHub URL'),
   personalPortfolioWebsite: optionalWebUrl('Invalid portfolio website URL'),
-  resumePdf: z.string().optional().or(z.literal('')),
+  resumePdf: optionalAssetUrl('Invalid resume URL'),
   displayOrder: z.number().int().min(1).optional(),
-  publications: z.array(z.string()).default([]),
+  publications: z.array(z.string().max(128)).max(500).default([]),
 })
 
 export type MemberInput = z.infer<typeof memberSchema>

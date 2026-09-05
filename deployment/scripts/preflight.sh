@@ -6,7 +6,7 @@ fail() {
   exit 1
 }
 
-for command_name in node npm pm2 nginx mongodump mongorestore tar sha256sum curl; do
+for command_name in node npm pm2 nginx mongodump mongorestore tar sha256sum curl openssl; do
   command -v "$command_name" >/dev/null || fail "$command_name is required"
 done
 
@@ -14,11 +14,16 @@ app_root="${PRISM_APP_DIR:?PRISM_APP_DIR is required}"
 uploads_root="${UPLOADS_ROOT:?UPLOADS_ROOT is required}"
 logs_root="${LOGS_ROOT:?LOGS_ROOT is required}"
 backup_root="${BACKUP_ROOT:?BACKUP_ROOT is required}"
+signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:?BACKUP_SIGNING_PRIVATE_KEY is required}"
+signing_public_key="${BACKUP_SIGNING_PUBLIC_KEY:?BACKUP_SIGNING_PUBLIC_KEY is required}"
 mongodb_uri="${MONGODB_URI:?MONGODB_URI is required}"
 jwt_secret="${JWT_SECRET:?JWT_SECRET is required}"
 base_url="${NEXT_PUBLIC_BASE_URL:?NEXT_PUBLIC_BASE_URL is required}"
+bind_address="${PRISM_BIND_ADDRESS:-127.0.0.1}"
 
 [[ "$base_url" == https://* ]] || fail 'NEXT_PUBLIC_BASE_URL must use HTTPS'
+[[ "$bind_address" == '127.0.0.1' || "$bind_address" == '::1' ]] \
+  || fail 'PRISM_BIND_ADDRESS must be a loopback address'
 [[ "${NEXT_PUBLIC_API_URL:-$base_url}" == "$base_url" ]] || fail 'NEXT_PUBLIC_API_URL must match NEXT_PUBLIC_BASE_URL'
 [[ ${#jwt_secret} -ge 32 ]] || fail 'JWT_SECRET must contain at least 32 characters'
 case "${jwt_secret,,}" in
@@ -35,6 +40,14 @@ for directory in "$app_root" "$uploads_root" "$logs_root" "$backup_root"; do
   [[ -d "$directory" ]] || fail "directory does not exist: $directory"
   [[ -w "$directory" ]] || fail "directory is not writable: $directory"
 done
+
+[[ -f "$signing_private_key" && -r "$signing_private_key" ]] \
+  || fail 'BACKUP_SIGNING_PRIVATE_KEY must be a readable file'
+[[ -f "$signing_public_key" && -r "$signing_public_key" ]] \
+  || fail 'BACKUP_SIGNING_PUBLIC_KEY must be a readable file'
+private_key_mode="$(stat -c '%a' "$signing_private_key")"
+[[ "$private_key_mode" == '400' || "$private_key_mode" == '600' ]] \
+  || fail 'BACKUP_SIGNING_PRIVATE_KEY must have mode 400 or 600'
 
 app_root="$(cd -- "$app_root" && pwd -P)"
 uploads_root="$(cd -- "$uploads_root" && pwd -P)"

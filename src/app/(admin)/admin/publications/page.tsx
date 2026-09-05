@@ -136,7 +136,7 @@ export default function PublicationsPage() {
     try {
       const [pubRes, memRes, areaRes] = await Promise.all([
         fetch('/api/publications'),
-        fetch('/api/members?limit=500'),
+        fetch('/api/members?limit=250'),
         fetch('/api/research-areas'),
       ])
       const [pubData, memData, areaData] = await Promise.all([
