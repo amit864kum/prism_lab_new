@@ -22,7 +22,7 @@ Generate a production secret with a cryptographically secure password generator 
 
 ## Response security
 
-All application responses disable MIME sniffing and framing, restrict referrer information and browser permissions, and apply a restrictive CSP with SRI-protected production scripts and explicit resource origins. Production responses also emit HSTS. The `X-Powered-By` header is disabled.
+All application responses disable MIME sniffing and framing, restrict referrer information and browser permissions, and apply a restrictive CSP with SRI-protected production bundles and explicit resource origins. Next.js inline bootstrap script elements are allowed for static-rendering compatibility, while inline event-handler attributes remain blocked with `script-src-attr 'none'`. Inter is self-hosted through `next/font`; browsers do not load Google Fonts. Production responses also emit HSTS. The `X-Powered-By` header is disabled.
 
 ## Errors and logs
 

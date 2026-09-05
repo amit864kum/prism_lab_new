@@ -1,4 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { resolve } from 'node:path'
 import { SignJWT } from 'jose'
 import { NextRequest } from 'next/server'
 import sharp from 'sharp'
@@ -14,6 +17,7 @@ import {
 } from '../../src/validators/url'
 
 const JWT_SECRET = 'security-test-secret-with-at-least-32-characters'
+const require = createRequire(import.meta.url)
 
 beforeAll(() => {
   process.env.JWT_SECRET = JWT_SECRET
@@ -78,6 +82,24 @@ describe('request-origin enforcement', () => {
     expect(enforceSameOriginApiRequest(missing)?.status).toBe(403)
     expect(enforceSameOriginApiRequest(crossSite)?.status).toBe(403)
     expect(enforceSameOriginApiRequest(sameOrigin)).toBeNull()
+  })
+})
+
+describe('browser security policy', () => {
+  it('allows Next.js bootstrap scripts without allowing inline event handlers or remote fonts', async () => {
+    const nextConfig = require('../../next.config.js') as {
+      headers: () => Promise<Array<{ headers: Array<{ key: string; value: string }> }>>
+    }
+    const headerGroups = await nextConfig.headers()
+    const policy = headerGroups
+      .flatMap((group) => group.headers)
+      .find((header) => header.key === 'Content-Security-Policy')?.value
+    const globalStyles = readFileSync(resolve('src/app/globals.css'), 'utf8')
+
+    expect(policy).toContain("script-src 'self' 'unsafe-inline'")
+    expect(policy).toContain("script-src-attr 'none'")
+    expect(policy).not.toContain("'unsafe-eval'")
+    expect(globalStyles).not.toContain('fonts.googleapis.com')
   })
 })
 
