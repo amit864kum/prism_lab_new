@@ -7,7 +7,7 @@ default_app_root="$(cd -- "$script_directory/../.." && pwd -P)"
 app_root="${PRISM_APP_DIR:-$default_app_root}"
 backup_root="${BACKUP_ROOT:?BACKUP_ROOT must point to durable backup storage}"
 mongodb_uri="${MONGODB_URI:?MONGODB_URI is required}"
-signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:?BACKUP_SIGNING_PRIVATE_KEY is required}"
+signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:-/etc/prism-lab-backup-signing.pem}"
 uploads_root="${UPLOADS_ROOT:-$app_root/uploads}"
 
 command -v mongodump >/dev/null || { echo 'mongodump is required' >&2; exit 1; }

@@ -6,15 +6,13 @@ Install MongoDB Database Tools (`mongodump` and `mongorestore`), `tar`, `sha256s
 
 Set `PRISM_APP_DIR`, `BACKUP_ROOT`, and `MONGODB_URI` through the operator environment. Do not place secrets in shell history or repository files.
 
-Create a signing key outside the backup directory and configure `BACKUP_SIGNING_PRIVATE_KEY` and `BACKUP_SIGNING_PUBLIC_KEY` with these paths:
+The automated EC2 deployment provisions a 3072-bit RSA signing key on first use. It uses `/etc/prism-lab-backup-signing.pem` and `/etc/prism-lab-backup-signing.pub.pem` unless `BACKUP_SIGNING_PRIVATE_KEY` and `BACKUP_SIGNING_PUBLIC_KEY` override the paths. Existing installations can provision the pair explicitly before preflight:
 
 ```bash
-sudo openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out /etc/prism-lab-backup-signing.pem
-sudo openssl pkey -in /etc/prism-lab-backup-signing.pem -pubout -out /etc/prism-lab-backup-signing.pub.pem
-sudo chown prism:prism /etc/prism-lab-backup-signing*.pem
-sudo chmod 600 /etc/prism-lab-backup-signing.pem
-sudo chmod 644 /etc/prism-lab-backup-signing.pub.pem
+sudo -E bash deployment/scripts/provision-backup-signing-key.sh
 ```
+
+Back up the private signing key separately in the deployment secret store. Losing it prevents creation of manifests that existing restore policy will trust; replacing it requires an explicitly coordinated key rotation.
 
 ## Create a coordinated backup
 

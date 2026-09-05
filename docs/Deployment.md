@@ -17,7 +17,7 @@ The Next.js process must bind only to `127.0.0.1` (or `::1`) through `PRISM_BIND
 ## First deployment
 
 1. Create a versioned release directory and deploy the exact reviewed commit.
-2. Supply environment values from the secret manager using `deployment/production.env.example` as a names-only reference, create the durable upload/log/backup directories, install the candidate Nginx configuration and TLS paths, then run `bash deployment/scripts/preflight.sh`.
+2. Supply environment values from the secret manager using `deployment/production.env.example` as a names-only reference, create the durable upload/log/backup directories, install the candidate Nginx configuration and TLS paths, provision the backup signing key with `sudo -E bash deployment/scripts/provision-backup-signing-key.sh`, then run `bash deployment/scripts/preflight.sh`. The automated EC2 workflow performs the provisioning step itself.
 3. Run `npm ci` and `npm run release:verify`. Do not continue if any command fails.
 4. Restore or migrate database/uploads according to [Backup.md](./Backup.md) and [Storage.md](./Storage.md).
 5. Ensure `uploads/` and `logs/` are persistent and writable by only the application account.

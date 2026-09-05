@@ -6,7 +6,7 @@ fail() {
   exit 1
 }
 
-for command_name in node npm pm2 nginx mongodump mongorestore tar sha256sum curl openssl; do
+for command_name in node npm pm2 nginx mongodump mongorestore tar sha256sum curl openssl cmp stat; do
   command -v "$command_name" >/dev/null || fail "$command_name is required"
 done
 
@@ -14,8 +14,8 @@ app_root="${PRISM_APP_DIR:?PRISM_APP_DIR is required}"
 uploads_root="${UPLOADS_ROOT:?UPLOADS_ROOT is required}"
 logs_root="${LOGS_ROOT:?LOGS_ROOT is required}"
 backup_root="${BACKUP_ROOT:?BACKUP_ROOT is required}"
-signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:?BACKUP_SIGNING_PRIVATE_KEY is required}"
-signing_public_key="${BACKUP_SIGNING_PUBLIC_KEY:?BACKUP_SIGNING_PUBLIC_KEY is required}"
+signing_private_key="${BACKUP_SIGNING_PRIVATE_KEY:-/etc/prism-lab-backup-signing.pem}"
+signing_public_key="${BACKUP_SIGNING_PUBLIC_KEY:-/etc/prism-lab-backup-signing.pub.pem}"
 mongodb_uri="${MONGODB_URI:?MONGODB_URI is required}"
 jwt_secret="${JWT_SECRET:?JWT_SECRET is required}"
 base_url="${NEXT_PUBLIC_BASE_URL:?NEXT_PUBLIC_BASE_URL is required}"
@@ -48,6 +48,8 @@ done
 private_key_mode="$(stat -c '%a' "$signing_private_key")"
 [[ "$private_key_mode" == '400' || "$private_key_mode" == '600' ]] \
   || fail 'BACKUP_SIGNING_PRIVATE_KEY must have mode 400 or 600'
+openssl pkey -in "$signing_private_key" -pubout 2>/dev/null | cmp -s - "$signing_public_key" \
+  || fail 'Backup signing public key does not match the configured private key'
 
 app_root="$(cd -- "$app_root" && pwd -P)"
 uploads_root="$(cd -- "$uploads_root" && pwd -P)"

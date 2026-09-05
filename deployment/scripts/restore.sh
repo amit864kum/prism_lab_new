@@ -7,7 +7,7 @@ default_app_root="$(cd -- "$script_directory/../.." && pwd -P)"
 app_root="${PRISM_APP_DIR:-$default_app_root}"
 restore_source="${RESTORE_SOURCE:?RESTORE_SOURCE must identify a completed backup directory}"
 mongodb_uri="${MONGODB_URI:?MONGODB_URI is required}"
-signing_public_key="${BACKUP_SIGNING_PUBLIC_KEY:?BACKUP_SIGNING_PUBLIC_KEY is required}"
+signing_public_key="${BACKUP_SIGNING_PUBLIC_KEY:-/etc/prism-lab-backup-signing.pub.pem}"
 uploads_root="${UPLOADS_ROOT:-$app_root/uploads}"
 
 if [[ "${RESTORE_CONFIRM:-}" != 'restore-prism-lab' ]]; then
