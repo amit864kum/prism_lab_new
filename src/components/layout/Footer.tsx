@@ -1,11 +1,37 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ExternalLink, Mail, Phone } from 'lucide-react'
+import { ExternalLink, Mail, Phone, Users } from 'lucide-react'
 import Link from 'next/link'
 import SafeImage from '@/components/ui/SafeImage'
 
 const PRISM_EMBLEM = '/images/prism-emblem.png'
+const VISITOR_STORAGE_KEY = 'prism_visitor_id'
+let inMemoryVisitorId: string | null = null
+
+function getOrCreateVisitorId() {
+  if (inMemoryVisitorId) return inMemoryVisitorId
+
+  try {
+    const storedVisitorId = window.localStorage.getItem(VISITOR_STORAGE_KEY)
+    if (storedVisitorId) {
+      inMemoryVisitorId = storedVisitorId
+      return storedVisitorId
+    }
+  } catch {
+    // The HTTP-only cookie remains the persistent fallback when storage is blocked.
+  }
+
+  inMemoryVisitorId = window.crypto.randomUUID()
+
+  try {
+    window.localStorage.setItem(VISITOR_STORAGE_KEY, inMemoryVisitorId)
+  } catch {
+    // Keep the identifier in memory so duplicate effects still reuse it.
+  }
+
+  return inMemoryVisitorId
+}
 
 interface FooterData {
   copyrightText: string
@@ -31,13 +57,37 @@ const fallbackFooter: FooterData = {
 
 export default function Footer() {
   const [data, setData] = useState<FooterData | null>(null)
+  const [totalVisitors, setTotalVisitors] = useState<number | null>(null)
+
   useEffect(() => {
     const fetchFooter = async () => {
       try {
-        const res = await fetch('/api/footer')
-        const json = await res.json()
+        const visitorId = getOrCreateVisitorId()
+        const [footerResult, visitorResult] = await Promise.allSettled([
+          fetch('/api/footer'),
+          fetch('/api/visitors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visitorId }),
+          }),
+        ])
 
-        if (res.ok && json.footer) {
+        if (visitorResult.status === 'fulfilled') {
+          const visitorJson = await visitorResult.value.json()
+          if (
+            visitorResult.value.ok &&
+            Number.isSafeInteger(visitorJson.totalVisitors) &&
+            visitorJson.totalVisitors >= 0
+          ) {
+            setTotalVisitors(visitorJson.totalVisitors)
+          }
+        }
+
+        if (footerResult.status !== 'fulfilled') return
+
+        const json = await footerResult.value.json()
+
+        if (footerResult.value.ok && json.footer) {
           setData({
             copyrightText:
               json.footer.copyrightText ||
@@ -157,13 +207,25 @@ export default function Footer() {
           </section>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-2 border-t border-white/10 px-12 py-4 text-center text-xs text-slate-400 sm:flex-row sm:px-16 sm:text-left">
+        <div className="grid items-center gap-2 border-t border-white/10 px-6 py-4 text-center text-xs text-slate-400 sm:grid-cols-3 sm:px-16 sm:text-left">
           <p className="footer-bottom-copy">{data.copyrightText}</p>
+          <p
+            className="footer-bottom-copy inline-flex min-h-5 items-center justify-center gap-1.5 tabular-nums"
+            aria-live="polite"
+          >
+            <Users className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>
+              Total visitors:{' '}
+              {totalVisitors === null
+                ? '—'
+                : totalVisitors.toLocaleString()}
+            </span>
+          </p>
           <a
             href={data.developerLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-1.5 transition-colors hover:text-blue-400"
+            className="group inline-flex items-center justify-center gap-1.5 transition-colors hover:text-blue-400 sm:justify-self-end"
           >
             {data.developerName}
             <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

@@ -1,7 +1,18 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ArrowLeft, BookOpen, Calendar, ExternalLink, FileText, Globe, GraduationCap, Mail, User, Github, } from 'lucide-react'
+import {
+  ArrowLeft,
+  BookOpen,
+  Calendar,
+  ExternalLink,
+  FileText,
+  Github,
+  Globe,
+  GraduationCap,
+  Mail,
+  User,
+} from 'lucide-react'
 import { getPublicMember, getPublicMemberProfile } from '@/services/public-content.service'
 import SafeImage from '@/components/ui/SafeImage'
 import { getPublicationTypeLabel } from '@/lib/publication-types'
@@ -9,6 +20,21 @@ import { MEMBER_ROLE_LABELS, type MemberRole } from '@/lib/member-options'
 import DOMPurify from 'isomorphic-dompurify'
 
 export const dynamic = 'force-dynamic'
+
+function LinkedInIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M19 0H5C2.239 0 0 2.239 0 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5V5c0-2.761-2.238-5-5-5ZM8 19H5V8h3v11ZM6.5 6.732c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764ZM20 19h-3v-5.604c0-3.368-4-3.113-4 0V19h-3V8h3v1.765c1.396-2.586 7-2.777 7 2.476V19Z" />
+    </svg>
+  )
+}
 
 interface PageProps {
   params: Promise<{
@@ -87,7 +113,7 @@ export default async function MemberProfilePage({ params }: PageProps) {
                 )}
                 {member.linkedinUrl && (
                   <a href={member.linkedinUrl} target="_blank" rel="noopener noreferrer" className="relative z-20 flex items-center gap-3 hover:text-blue-600 dark:hover:text-blue-400 justify-center transition">
-                    <ExternalLink className="h-4.5 w-4.5 text-slate-400" />
+                    <LinkedInIcon className="h-4.5 w-4.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
                     <span>LinkedIn Profile</span>
                   </a>
                 )}
